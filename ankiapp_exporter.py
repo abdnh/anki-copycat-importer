@@ -1,4 +1,9 @@
 import sqlite3
+from mimetypes import guess_extension
+import urllib
+import html
+import re
+import sys
 
 from ankiconnect import ankiconnect
 
@@ -41,12 +46,66 @@ class Card:
         self.tags = tags
 
 
+# https://github.com/ankitects/anki/blob/main/qt/aqt/editor.py
+
+pics = ("jpg", "jpeg", "png", "tif", "tiff", "gif", "svg", "webp", "ico")
+audio = (
+    "3gp",
+    "aac",
+    "avi",
+    "flac",
+    "flv",
+    "m4a",
+    "mkv",
+    "mov",
+    "mp3",
+    "mp4",
+    "mpeg",
+    "mpg",
+    "oga",
+    "ogg",
+    "ogv",
+    "ogx",
+    "opus",
+    "spx",
+    "swf",
+    "wav",
+    "webm",
+)
+
+
+def fnameToLink(fname):
+    ext = fname.split(".")[-1].lower()
+    if ext in pics:
+        name = urllib.parse.quote(fname.encode("utf8"))
+        return f'<img src="{name}">'
+    else:
+        return f"[sound:{html.escape(fname, quote=False)}]"
+
+
+BLOB_REF_RE = re.compile(r'{{blob (.*?)}}')
+
+
+def repl_blob_ref(exporter, match):
+    blob_id = match.group(1)
+    return fnameToLink(exporter.media[blob_id].filename)
+
+
+class Media:
+    def __init__(self, id, mime, data):
+        self.id = id
+        self.mime = mime
+        self.ext = guess_extension(mime)
+        self.data = data
+
+
 class AnkiAppExporter:
     def __init__(self, filename):
         self.con = sqlite3.connect(filename)
         self.cur = self.con.cursor()
         self._export_notetypes()
         self._export_decks()
+        self._export_media()
         self._export_cards()
 
     def _export_notetypes(self):
@@ -69,6 +128,14 @@ class AnkiAppExporter:
             description = row[3]
             self.decks[id] = Deck(id, name, description)
             # print(id, name, description)
+
+    def _export_media(self):
+        self.media = {}
+        for row in self.cur.execute('SELECT id, type, value FROM knol_blobs'):
+            id = row[0]
+            mime = row[1]
+            data = row[2]
+            self.media[id] = Media(id, mime, data)
 
     def _export_cards(self):
         self.cards = {}
@@ -105,15 +172,27 @@ class AnkiAppExporter:
             # print(notetype.name)
             # print(templates)
             # FIXME: we should uniqify model name before creating as AnkiApp apparently allows models with identical names (?)
-            result = ankiconnect('createModel',
-                                 modelName=notetype.name,
-                                 inOrderFields=notetype.fields,
-                                 cardTemplates=templates,
-                                 css=notetype.style)
-            notetype.anki_id = result['id']
+            try:
+                result = ankiconnect('createModel',
+                                     modelName=notetype.name,
+                                     inOrderFields=notetype.fields,
+                                     cardTemplates=templates,
+                                     css=notetype.style)
+                notetype.anki_id = result['id']
+            except Exception as ex:
+                print(ex, file=sys.stderr)
+
+        for media in self.media.values():
+            filename = ankiconnect(
+                'storeMediaFile', filename=media.id + media.ext, data=media.data)
+            media.filename = filename
 
         notes = []
         for card in self.cards.values():
+            for field_name, contents in card.fields.items():
+                card.fields[field_name] = BLOB_REF_RE.sub(
+                    lambda m: repl_blob_ref(self, m), contents)
+
             note = {
                 'deckName': card.deck.name,
                 'modelName': card.notetype.name,
@@ -124,7 +203,7 @@ class AnkiAppExporter:
         try:
             ankiconnect('addNotes', notes=notes)
         except Exception as ex:
-            print(ex)
+            print(ex, file=sys.stderr)
 
 
 if __name__ == '__main__':

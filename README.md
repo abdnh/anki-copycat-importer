@@ -16,11 +16,6 @@ This program salvages the cards from the SQLite database and was inspired by the
 
 ## Notes & Known Issues
 - Study progress is not exported.
-- Media exporting is not implemented yet.
-
-
-## TODO
-- [ ] media exporting - see knol_blobs table
 
 ## References
 

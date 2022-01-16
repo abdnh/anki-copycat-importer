@@ -23,7 +23,7 @@ class NoteType:
         # AnkiApp uses `{{[FieldName]}}`
         return template.replace("{{[", "{{").replace("]}}", "}}")
 
-    def __str__(self):
+    def __repr__(self):
         return f"NoteType({self.name})"
 
 
@@ -33,7 +33,7 @@ class Deck:
         self.name = name
         self.description = description  # FIXME: not imported yet
 
-    def __str__(self):
+    def __repr__(self):
         return f"Deck({self.name})"
 
 
@@ -86,9 +86,9 @@ def fnameToLink(fname):
 BLOB_REF_RE = re.compile(r'{{blob (.*?)}}')
 
 
-def repl_blob_ref(exporter, match):
+def repl_blob_ref(importer, match):
     blob_id = match.group(1)
-    return fnameToLink(exporter.media[blob_id].filename)
+    return fnameToLink(importer.media[blob_id].filename)
 
 
 class Media:
@@ -99,16 +99,16 @@ class Media:
         self.data = data
 
 
-class AnkiAppExporter:
+class AnkiAppImporter:
     def __init__(self, filename):
         self.con = sqlite3.connect(filename)
         self.cur = self.con.cursor()
-        self._export_notetypes()
-        self._export_decks()
-        self._export_media()
-        self._export_cards()
+        self._extract_notetypes()
+        self._extract_decks()
+        self._extract_media()
+        self._extract_cards()
 
-    def _export_notetypes(self):
+    def _extract_notetypes(self):
         self.notetypes = {}
         for row in self.cur.execute('SELECT * FROM layouts'):
             id, name, templates, style = row[:4]
@@ -120,7 +120,7 @@ class AnkiAppExporter:
             # print(id, fields)
             # print(row)
 
-    def _export_decks(self):
+    def _extract_decks(self):
         self.decks = {}
         for row in self.cur.execute('SELECT * FROM decks'):
             id = row[0]
@@ -129,7 +129,7 @@ class AnkiAppExporter:
             self.decks[id] = Deck(id, name, description)
             # print(id, name, description)
 
-    def _export_media(self):
+    def _extract_media(self):
         self.media = {}
         for row in self.cur.execute('SELECT id, type, value FROM knol_blobs'):
             id = row[0]
@@ -137,7 +137,7 @@ class AnkiAppExporter:
             data = row[2]
             self.media[id] = Media(id, mime, data)
 
-    def _export_cards(self):
+    def _extract_cards(self):
         self.cards = {}
         for row in self.cur.execute('SELECT * FROM cards'):
             id = row[0]
@@ -207,5 +207,5 @@ class AnkiAppExporter:
 
 
 if __name__ == '__main__':
-    exporter = AnkiAppExporter(input('path of database file to import: '))
-    exporter.import_to_anki()
+    importer = AnkiAppImporter(input('path of database file to import: '))
+    importer.import_to_anki()

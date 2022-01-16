@@ -3,9 +3,12 @@ from mimetypes import guess_extension
 import urllib
 import html
 import re
-import sys
+import base64
 
-from ankiconnect import ankiconnect
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aqt.main import AnkiQt
 
 
 class NoteType:
@@ -83,7 +86,7 @@ def fnameToLink(fname):
         return f"[sound:{html.escape(fname, quote=False)}]"
 
 
-BLOB_REF_RE = re.compile(r'{{blob (.*?)}}')
+BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
 
 
 def repl_blob_ref(importer, match):
@@ -96,7 +99,7 @@ class Media:
         self.id = id
         self.mime = mime
         self.ext = guess_extension(mime)
-        self.data = data
+        self.data = base64.b64decode(data)
 
 
 class AnkiAppImporter:
@@ -110,11 +113,13 @@ class AnkiAppImporter:
 
     def _extract_notetypes(self):
         self.notetypes = {}
-        for row in self.cur.execute('SELECT * FROM layouts'):
+        for row in self.cur.execute("SELECT * FROM layouts"):
             id, name, templates, style = row[:4]
             fields = []
             c = self.con.cursor()
-            for r in c.execute('SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?', (id,)):
+            for r in c.execute(
+                "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (id,)
+            ):
                 fields.append(r[0])
             self.notetypes[id] = NoteType(id, name, templates, style, fields)
             # print(id, fields)
@@ -122,7 +127,7 @@ class AnkiAppImporter:
 
     def _extract_decks(self):
         self.decks = {}
-        for row in self.cur.execute('SELECT * FROM decks'):
+        for row in self.cur.execute("SELECT * FROM decks"):
             id = row[0]
             name = row[2]
             description = row[3]
@@ -131,7 +136,7 @@ class AnkiAppImporter:
 
     def _extract_media(self):
         self.media = {}
-        for row in self.cur.execute('SELECT id, type, value FROM knol_blobs'):
+        for row in self.cur.execute("SELECT id, type, value FROM knol_blobs"):
             id = row[0]
             mime = row[1]
             data = row[2]
@@ -139,73 +144,74 @@ class AnkiAppImporter:
 
     def _extract_cards(self):
         self.cards = {}
-        for row in self.cur.execute('SELECT * FROM cards'):
+        for row in self.cur.execute("SELECT * FROM cards"):
             id = row[0]
             knol_id = row[1]
             layout_id = row[2]
             notetype = self.notetypes[layout_id]
             c = self.con.cursor()
-            c.execute('SELECT deck_id FROM cards_decks WHERE card_id = ?', (id,))
+            c.execute("SELECT deck_id FROM cards_decks WHERE card_id = ?", (id,))
             deck = self.decks[c.fetchone()[0]]
             fields = {}
-            for row in c.execute('SELECT knol_key_name, value FROM knol_values WHERE knol_id = ?', (knol_id,)):
+            for row in c.execute(
+                "SELECT knol_key_name, value FROM knol_values WHERE knol_id = ?",
+                (knol_id,),
+            ):
                 # NOTE: Filling empty fields for now to avoid errors on importing empty notes
                 # because I've not figured out yet a way to find the order of notetype fields (If any is kept by AnkiApp)
-                fields[row[0]] = '&nbsp' if not row[1] else row[1]
-            tags = list(map(lambda r: r[0], c.execute(
-                'SELECT tag_name FROM knols_tags WHERE knol_id = ?', (knol_id,))))
+                fields[row[0]] = "&nbsp" if not row[1] else row[1]
+            tags = list(
+                map(
+                    lambda r: r[0],
+                    c.execute(
+                        "SELECT tag_name FROM knols_tags WHERE knol_id = ?", (knol_id,)
+                    ),
+                )
+            )
 
             self.cards[id] = Card(id, notetype, deck, fields, tags)
-            # print(id, notetype, deck, fields, tags)
 
-    def import_to_anki(self):
+    def import_to_anki(self, mw: "AnkiQt"):
         for deck in self.decks.values():
-            deck_id = ankiconnect('createDeck', deck=deck.name)
-            deck.anki_id = deck_id
+            did = mw.col.decks.add_normal_deck_with_name(deck.name).id
+            deck.anki_id = did
+
         for notetype in self.notetypes.values():
-            templates = [
-                {
-                    "Front": notetype.front,
-                    "Back": notetype.back,
-                }
-            ]
-            # print(notetype.name)
-            # print(templates)
-            # FIXME: we should uniqify model name before creating as AnkiApp apparently allows models with identical names (?)
-            try:
-                result = ankiconnect('createModel',
-                                     modelName=notetype.name,
-                                     inOrderFields=notetype.fields,
-                                     cardTemplates=templates,
-                                     css=notetype.style)
-                notetype.anki_id = result['id']
-            except Exception as ex:
-                print(ex, file=sys.stderr)
+            model = mw.col.models.new(notetype.name)
+            mw.col.models.ensure_name_unique(model)
+            for field_name in notetype.fields:
+                field_dict = mw.col.models.new_field(field_name)
+                mw.col.models.add_field(model, field_dict)
+            template_dict = mw.col.models.new_template("Card 1")
+            template_dict["qfmt"] = notetype.front
+            template_dict["afmt"] = notetype.back
+            mw.col.models.add_template(model, template_dict)
+            model["css"] = notetype.style
+            mw.col.models.add(model)
+            notetype.anki_id = model["id"]
 
         for media in self.media.values():
-            filename = ankiconnect(
-                'storeMediaFile', filename=media.id + media.ext, data=media.data)
+            filename = mw.col.media.write_data(media.id + media.ext, media.data)
             media.filename = filename
 
         notes = []
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
                 card.fields[field_name] = BLOB_REF_RE.sub(
-                    lambda m: repl_blob_ref(self, m), contents)
-
+                    lambda m: repl_blob_ref(self, m), contents
+                )
             note = {
-                'deckName': card.deck.name,
-                'modelName': card.notetype.name,
-                'fields': card.fields,
-                'tags': card.tags
+                "deck": card.deck.anki_id,
+                "model": card.notetype.anki_id,
+                "fields": card.fields,
+                "tags": card.tags,
             }
             notes.append(note)
-        try:
-            ankiconnect('addNotes', notes=notes)
-        except Exception as ex:
-            print(ex, file=sys.stderr)
 
-
-if __name__ == '__main__':
-    importer = AnkiAppImporter(input('path of database file to import: '))
-    importer.import_to_anki()
+        for note_data in notes:
+            model = mw.col.models.get(note_data["model"])
+            note = mw.col.new_note(model)
+            for field_name, contents in note_data["fields"].items():
+                note[field_name] = contents
+            note.set_tags_from_str("".join(note_data["tags"]))
+            mw.col.add_note(note, note_data["deck"])

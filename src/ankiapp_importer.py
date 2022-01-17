@@ -4,8 +4,9 @@ import urllib
 import html
 import re
 import base64
-
 from typing import TYPE_CHECKING
+
+import aqt.editor
 
 if TYPE_CHECKING:
     from aqt.main import AnkiQt
@@ -51,35 +52,10 @@ class Card:
 
 # https://github.com/ankitects/anki/blob/main/qt/aqt/editor.py
 
-pics = ("jpg", "jpeg", "png", "tif", "tiff", "gif", "svg", "webp", "ico")
-audio = (
-    "3gp",
-    "aac",
-    "avi",
-    "flac",
-    "flv",
-    "m4a",
-    "mkv",
-    "mov",
-    "mp3",
-    "mp4",
-    "mpeg",
-    "mpg",
-    "oga",
-    "ogg",
-    "ogv",
-    "ogx",
-    "opus",
-    "spx",
-    "swf",
-    "wav",
-    "webm",
-)
-
 
 def fnameToLink(fname):
     ext = fname.split(".")[-1].lower()
-    if ext in pics:
+    if ext in aqt.editor.pics:
         name = urllib.parse.quote(fname.encode("utf8"))
         return f'<img src="{name}">'
     else:

@@ -25,6 +25,7 @@ class NoteType:
 
     def _fix_field_refs(self, template):
         # AnkiApp uses `{{[FieldName]}}`
+        # FIXME: use a regex instead?
         return template.replace("{{[", "{{").replace("]}}", "}}")
 
     def __repr__(self):

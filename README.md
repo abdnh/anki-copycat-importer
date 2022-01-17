@@ -18,7 +18,8 @@ It imports cards, decks, note types, and media files.
 
 - Study progress is not exported.
 - AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause
-  Anki to refuse to import its note if it happened to be imported as the first field. To prevent that, the add-on fills all empty fields with a non-breaking space.
+  Anki to refuse to import its note if it happened to be imported as the first field.
+  To prevent that, the add-on fills all empty fields with a non-breaking space.
 
 ## References
 

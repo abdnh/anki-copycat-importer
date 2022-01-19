@@ -13,8 +13,7 @@ if TYPE_CHECKING:
 
 
 class NoteType:
-    def __init__(self, id, name, templates, style, fields):
-        self.id = id
+    def __init__(self, name, templates, style, fields):
         self.name = name
         # Templates are stored as a string representation of a Python list, apparently
         templates = eval(templates)
@@ -33,8 +32,7 @@ class NoteType:
 
 
 class Deck:
-    def __init__(self, id, name, description):
-        self.id = id
+    def __init__(self, name, description):
         self.name = name
         self.description = description  # FIXME: not imported yet
 
@@ -43,8 +41,7 @@ class Deck:
 
 
 class Card:
-    def __init__(self, id, notetype, deck, fields, tags):
-        self.id = id
+    def __init__(self, notetype, deck, fields, tags):
         self.notetype = notetype
         self.deck = deck
         self.fields = fields
@@ -98,9 +95,7 @@ class AnkiAppImporter:
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (id,)
             ):
                 fields.append(r[0])
-            self.notetypes[id] = NoteType(id, name, templates, style, fields)
-            # print(id, fields)
-            # print(row)
+            self.notetypes[id] = NoteType(name, templates, style, fields)
 
     def _extract_decks(self):
         self.decks = {}
@@ -108,8 +103,7 @@ class AnkiAppImporter:
             id = row[0]
             name = row[2]
             description = row[3]
-            self.decks[id] = Deck(id, name, description)
-            # print(id, name, description)
+            self.decks[id] = Deck(name, description)
 
     def _extract_media(self):
         self.media = {}
@@ -146,12 +140,12 @@ class AnkiAppImporter:
                 )
             )
 
-            self.cards[id] = Card(id, notetype, deck, fields, tags)
+            self.cards[id] = Card(notetype, deck, fields, tags)
 
     def import_to_anki(self, mw: "AnkiQt"):
         for deck in self.decks.values():
             did = mw.col.decks.add_normal_deck_with_name(deck.name).id
-            deck.anki_id = did
+            deck.id = did
 
         for notetype in self.notetypes.values():
             model = mw.col.models.new(notetype.name)
@@ -165,7 +159,7 @@ class AnkiAppImporter:
             mw.col.models.add_template(model, template_dict)
             model["css"] = notetype.style
             mw.col.models.add(model)
-            notetype.anki_id = model["id"]
+            notetype.id = model["id"]
 
         for media in self.media.values():
             filename = mw.col.media.write_data(media.id + media.ext, media.data)
@@ -178,8 +172,8 @@ class AnkiAppImporter:
                     lambda m: repl_blob_ref(self, m), contents
                 )
             note = {
-                "deck": card.deck.anki_id,
-                "model": card.notetype.anki_id,
+                "deck": card.deck.id,
+                "model": card.notetype.id,
                 "fields": card.fields,
                 "tags": card.tags,
             }

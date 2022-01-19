@@ -9,6 +9,7 @@ def import_from_ankiapp(filename):
     importer = AnkiAppImporter(filename)
     importer.import_to_anki(mw)
     showInfo("Imported successfully.", mw, title="AnkiApp Importer")
+    mw.reset()
 
 
 action = QAction(mw)

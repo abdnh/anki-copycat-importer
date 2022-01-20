@@ -34,7 +34,7 @@ class NoteType:
 class Deck:
     def __init__(self, name, description):
         self.name = name
-        self.description = description  # FIXME: not imported yet
+        self.description = description
 
     def __repr__(self):
         return f"Deck({self.name})"
@@ -146,6 +146,10 @@ class AnkiAppImporter:
         for deck in self.decks.values():
             did = mw.col.decks.add_normal_deck_with_name(deck.name).id
             deck.id = did
+            deck_dict = mw.col.decks.get(did)
+            if not deck_dict.get("desc"):
+                deck_dict["desc"] = deck.description
+                mw.col.decks.update_dict(deck_dict)
 
         for notetype in self.notetypes.values():
             model = mw.col.models.new(notetype.name)

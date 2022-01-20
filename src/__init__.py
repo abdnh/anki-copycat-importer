@@ -1,6 +1,6 @@
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import getFile, showInfo
+from aqt.utils import getFile, tooltip
 
 from .ankiapp_importer import AnkiAppImporter
 
@@ -8,7 +8,7 @@ from .ankiapp_importer import AnkiAppImporter
 def import_from_ankiapp(filename):
     importer = AnkiAppImporter(filename)
     importer.import_to_anki(mw)
-    showInfo("Imported successfully.", mw, title="AnkiApp Importer")
+    tooltip("Imported successfully.")
     mw.reset()
 
 

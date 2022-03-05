@@ -16,5 +16,5 @@ action = QAction(mw)
 action.setText("Import From AnkiApp")
 mw.form.menuTools.addAction(action)
 action.triggered.connect(
-    lambda: getFile(mw, "AnkiApp database file to import", cb=import_from_ankiapp)
+    lambda: getFile(mw, "AnkiApp database file to import", key="AnkiAppImporter", cb=import_from_ankiapp)
 )

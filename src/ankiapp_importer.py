@@ -98,12 +98,13 @@ class AnkiAppImporter:
         self.notetypes = {}
         for row in self.cur.execute("SELECT * FROM layouts"):
             id, name, templates, style = row[:4]
-            fields = []
+            fields = set()
             c = self.con.cursor()
             for r in c.execute(
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (id,)
             ):
-                fields.append(r[0])
+                fields.add(r[0])
+
             self.notetypes[id] = NoteType(name, templates, style, fields)
 
     def _extract_decks(self):
@@ -148,6 +149,12 @@ class AnkiAppImporter:
                     ),
                 )
             )
+
+            # It seems that sometimes there are field names missing from
+            # knol_keys_layouts (processed in _extract_notetypes) even though
+            # they have knol_values entries.
+            # So we collect all field names we find here and update the notetype accordingly
+            notetype.fields.update(fields.keys())
 
             self.cards[id] = Card(notetype, deck, fields, tags)
 

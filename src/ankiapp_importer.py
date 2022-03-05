@@ -158,7 +158,7 @@ class AnkiAppImporter:
 
             self.cards[id] = Card(notetype, deck, fields, tags)
 
-    def import_to_anki(self, mw: "AnkiQt"):
+    def import_to_anki(self, mw: "AnkiQt") -> int:
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing decks..."))
         for deck in self.decks.values():
             did = mw.col.decks.add_normal_deck_with_name(deck.name).id
@@ -191,24 +191,25 @@ class AnkiAppImporter:
             media.filename = filename
 
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing cards..."))
-        notes = []
+        notes_count = 0
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
                 card.fields[field_name] = BLOB_REF_RE.sub(
                     lambda m: repl_blob_ref(self, m), contents
                 )
-            note = {
+            note_data = {
                 "deck": card.deck.id,
                 "model": card.notetype.id,
                 "fields": card.fields,
                 "tags": card.tags,
             }
-            notes.append(note)
 
-        for note_data in notes:
             model = mw.col.models.get(note_data["model"])
             note = mw.col.new_note(model)
             for field_name, contents in note_data["fields"].items():
                 note[field_name] = contents
             note.set_tags_from_str("".join(note_data["tags"]))
             mw.col.add_note(note, note_data["deck"])
+            notes_count += 1
+
+        return notes_count

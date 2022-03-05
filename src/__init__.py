@@ -13,14 +13,14 @@ def import_from_ankiapp(filename):
     )
     mw.progress.set_title("AnkiApp Importer")
 
-    def start_importing():
+    def start_importing() -> int:
         importer = AnkiAppImporter(filename)
-        importer.import_to_anki(mw)
+        return importer.import_to_anki(mw)
 
     def on_done(fut: Future) -> None:
         mw.progress.finish()
-        fut.result()
-        tooltip("Imported successfully.")
+        count = fut.result()
+        tooltip(f"Successfully Imported {count} card(s).")
         mw.reset()
 
     mw.taskman.run_in_background(start_importing, on_done)

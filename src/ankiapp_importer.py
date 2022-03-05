@@ -159,6 +159,7 @@ class AnkiAppImporter:
             self.cards[id] = Card(notetype, deck, fields, tags)
 
     def import_to_anki(self, mw: "AnkiQt"):
+        mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing decks..."))
         for deck in self.decks.values():
             did = mw.col.decks.add_normal_deck_with_name(deck.name).id
             deck.id = did
@@ -167,6 +168,9 @@ class AnkiAppImporter:
                 deck_dict["desc"] = deck.description
                 mw.col.decks.update_dict(deck_dict)
 
+        mw.taskman.run_on_main(
+            lambda: mw.progress.update(label="Importing notetypes...")
+        )
         for notetype in self.notetypes.values():
             model = mw.col.models.new(notetype.name)
             mw.col.models.ensure_name_unique(model)
@@ -181,10 +185,12 @@ class AnkiAppImporter:
             mw.col.models.add(model)
             notetype.id = model["id"]
 
+        mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing media..."))
         for media in self.media.values():
             filename = mw.col.media.write_data(media.id + media.ext, media.data)
             media.filename = filename
 
+        mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing cards..."))
         notes = []
         for card in self.cards.values():
             for field_name, contents in card.fields.items():

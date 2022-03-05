@@ -1,11 +1,9 @@
-<b># AnkiApp Importer</b>
-
 An add-on to import decks from the copycat AnkiApp (https://www.ankiapp.com/).
-
 It appears that AnkiApp started to paywall the deck export feature (see https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/). So you can no longer export a zip of your cards <a href="https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/">without paying</a>.
-
 This add-on salvages the cards from the SQLite database and was inspired by the Reddit post linked above. It imports cards, decks, note types, and media files.
 
-<b>## How to Use</b>
+<b>How to Use</b>
+<ul><li>Go to <b>Tools > Import From AnkiApp</b> and choose AnkiApp's database file (<code>C:\Users\%USERNAME%\AppData\Roaming\AnkiApp\databases\file__0</code> on Windows; see the Reddit post above for more info).</li><li>Grab a cup of coffee while waiting for importing to finish.</li></ul>
 
-<ul><li>Go to <b>Tools > Import From AnkiApp</b> and choose AnkiApp's database file (<code>C:\Users\%USERNAME%\AppData\Roaming\AnkiApp\databases\file__0</code> on Windows; see the Reddit post above for more info).</li><li>You should see the message "Imported successfully."</li></ul>
+<b>Notes & Known Issues</b>
+<ul><li>Study progress is not imported.</li><li>AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause Anki to refuse to import its note if it happened to be imported as the first field. To prevent that, the add-on fills all empty fields with a non-breaking space.</li></ul>

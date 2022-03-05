@@ -12,11 +12,11 @@ It imports cards, decks, note types, and media files.
 
 - Download the add-on from https://ankiweb.net/shared/info/2072125761
 - Run Anki and go to **Tools > Import From AnkiApp** and choose AnkiApp's database file (`C:\Users\%USERNAME%\AppData\Roaming\AnkiApp\databases\file__0` on Windows; see the Reddit post above for more info).
-- You should see the message "Imported successfully."
+- Grab a cup of coffee while waiting for importing to finish.
 
 ## Notes & Known Issues
 
-- Study progress is not exported.
+- Study progress is not imported.
 - AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause
   Anki to refuse to import its note if it happened to be imported as the first field.
   To prevent that, the add-on fills all empty fields with a non-breaking space.

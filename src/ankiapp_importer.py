@@ -69,10 +69,19 @@ def repl_blob_ref(importer, match):
 
 
 class Media:
+
+    # Work around guess_extension() not recognizing some file types
+    extensions_for_mimes = {
+        "image/webp": ".webp"  # Not recognized (on Windows 10 at least)
+    }
+
     def __init__(self, id, mime, data):
         self.id = id
         self.mime = mime
         self.ext = guess_extension(mime)
+        if not self.ext:
+            # FIXME: Maybe warn about unrecognized file types
+            self.ext = self.extensions_for_mimes.get(mime, ".mp3")
         self.data = base64.b64decode(data)
 
 

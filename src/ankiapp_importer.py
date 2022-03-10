@@ -141,14 +141,12 @@ class AnkiAppImporter:
                 # NOTE: Filling empty fields for now to avoid errors on importing empty notes
                 # because I've not figured out yet a way to find the order of notetype fields (If any is kept by AnkiApp)
                 fields[row[0]] = "&nbsp" if not row[1] else row[1]
-            tags = list(
-                map(
-                    lambda r: r[0],
-                    c.execute(
-                        "SELECT tag_name FROM knols_tags WHERE knol_id = ?", (knol_id,)
-                    ),
+            tags = [
+                r[0]
+                for r in c.execute(
+                    "SELECT tag_name FROM knols_tags WHERE knol_id = ?", (knol_id,)
                 )
-            )
+            ]
 
             # It seems that sometimes there are field names missing from
             # knol_keys_layouts (processed in _extract_notetypes) even though

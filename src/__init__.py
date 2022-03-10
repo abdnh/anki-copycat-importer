@@ -20,7 +20,7 @@ def import_from_ankiapp(filename):
     def on_done(fut: Future) -> None:
         mw.progress.finish()
         count = fut.result()
-        tooltip(f"Successfully Imported {count} card(s).")
+        tooltip(f"Successfully imported {count} card(s).")
         mw.reset()
 
     mw.taskman.run_in_background(start_importing, on_done)

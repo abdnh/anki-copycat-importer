@@ -76,7 +76,7 @@ class Media:
 
     # Work around guess_extension() not recognizing some file types
     extensions_for_mimes = {
-        "image/webp": ".webp"  # Not recognized (on Windows 10 at least)
+        "image/webp": ".webp"  # Not recognized on Windows without additional software (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
     }
 
     def __init__(self, id: str, mime: str, data: bytes):
@@ -84,8 +84,10 @@ class Media:
         self.mime = mime
         ext = guess_extension(mime)
         if not ext:
-            # FIXME: Maybe warn about unrecognized file types
-            ext = self.extensions_for_mimes.get(mime, ".mp3")
+            try:
+                ext = self.extensions_for_mimes[mime]
+            except KeyError:
+                raise Exception(f"unrecognized mime type: {mime}")
         self.ext = cast(str, ext)
         self.data = base64.b64decode(data)
         self.filename: Optional[str] = None  # Filename in Anki

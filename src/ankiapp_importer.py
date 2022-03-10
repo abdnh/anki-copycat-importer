@@ -4,16 +4,17 @@ import urllib
 import html
 import re
 import base64
-from typing import TYPE_CHECKING
+from typing import Optional, cast, Set, Dict, List
 
 import aqt.editor
-
-if TYPE_CHECKING:
-    from aqt.main import AnkiQt
+from aqt.main import AnkiQt
+from anki.decks import DeckId, DeckDict
+from anki.models import NotetypeDict, NotetypeId
 
 
 class NoteType:
-    def __init__(self, name, templates, style, fields):
+    def __init__(self, name: str, templates: str, style: str, fields: Set):
+        self.mid: Optional[NotetypeId] = None  # Anki's notetype ID
         self.name = name
         # Templates are stored as a string representation of a Python list, apparently
         templates = eval(templates)
@@ -22,26 +23,29 @@ class NoteType:
         self.style = style
         self.fields = fields
 
-    def _fix_field_refs(self, template):
+    def _fix_field_refs(self, template: str) -> str:
         # AnkiApp uses `{{[FieldName]}}`
         # FIXME: use a regex instead?
         return template.replace("{{[", "{{").replace("]}}", "}}")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"NoteType({self.name})"
 
 
 class Deck:
-    def __init__(self, name, description):
+    def __init__(self, name: str, description: str):
+        self.did: Optional[DeckId] = None  # Anki's deck ID
         self.name = name
         self.description = description
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Deck({self.name})"
 
 
 class Card:
-    def __init__(self, notetype, deck, fields, tags):
+    def __init__(
+        self, notetype: NoteType, deck: Deck, fields: Dict[str, str], tags: List[str]
+    ):
         self.notetype = notetype
         self.deck = deck
         self.fields = fields
@@ -51,7 +55,7 @@ class Card:
 # https://github.com/ankitects/anki/blob/main/qt/aqt/editor.py
 
 
-def fnameToLink(fname):
+def fnameToLink(fname: str) -> str:
     ext = fname.split(".")[-1].lower()
     if ext in aqt.editor.pics:
         name = urllib.parse.quote(fname.encode("utf8"))
@@ -63,7 +67,7 @@ def fnameToLink(fname):
 BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
 
 
-def repl_blob_ref(importer, match):
+def repl_blob_ref(importer, match) -> str:
     blob_id = match.group(1)
     return fnameToLink(importer.media[blob_id].filename)
 
@@ -75,14 +79,16 @@ class Media:
         "image/webp": ".webp"  # Not recognized (on Windows 10 at least)
     }
 
-    def __init__(self, id, mime, data):
+    def __init__(self, id: str, mime: str, data: bytes):
         self.id = id
         self.mime = mime
-        self.ext = guess_extension(mime)
-        if not self.ext:
+        ext = guess_extension(mime)
+        if not ext:
             # FIXME: Maybe warn about unrecognized file types
-            self.ext = self.extensions_for_mimes.get(mime, ".mp3")
+            ext = self.extensions_for_mimes.get(mime, ".mp3")
+        self.ext = cast(str, ext)
         self.data = base64.b64decode(data)
+        self.filename: Optional[str] = None  # Filename in Anki
 
 
 class AnkiAppImporter:
@@ -95,7 +101,7 @@ class AnkiAppImporter:
         self._extract_cards()
 
     def _extract_notetypes(self):
-        self.notetypes = {}
+        self.notetypes: Dict[bytes, NoteType] = {}
         for row in self.cur.execute("SELECT * FROM layouts"):
             id, name, templates, style = row[:4]
             fields = set()
@@ -108,7 +114,7 @@ class AnkiAppImporter:
             self.notetypes[id] = NoteType(name, templates, style, fields)
 
     def _extract_decks(self):
-        self.decks = {}
+        self.decks: Dict[bytes, Deck] = {}
         for row in self.cur.execute("SELECT * FROM decks"):
             id = row[0]
             name = row[2]
@@ -116,15 +122,15 @@ class AnkiAppImporter:
             self.decks[id] = Deck(name, description)
 
     def _extract_media(self):
-        self.media = {}
+        self.media: Dict[bytes, Media] = {}
         for row in self.cur.execute("SELECT id, type, value FROM knol_blobs"):
-            id = row[0]
+            id = str(row[0])
             mime = row[1]
             data = row[2]
             self.media[id] = Media(id, mime, data)
 
     def _extract_cards(self):
-        self.cards = {}
+        self.cards: Dict[bytes, Card] = {}
         for row in self.cur.execute("SELECT * FROM cards"):
             id = row[0]
             knol_id = row[1]
@@ -159,9 +165,9 @@ class AnkiAppImporter:
     def import_to_anki(self, mw: "AnkiQt") -> int:
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing decks..."))
         for deck in self.decks.values():
-            did = mw.col.decks.add_normal_deck_with_name(deck.name).id
-            deck.id = did
-            deck_dict = mw.col.decks.get(did)
+            did = DeckId(mw.col.decks.add_normal_deck_with_name(deck.name).id)
+            deck.did = did
+            deck_dict = cast(DeckDict, mw.col.decks.get(did))
             if not deck_dict.get("desc"):
                 deck_dict["desc"] = deck.description
                 mw.col.decks.update_dict(deck_dict)
@@ -181,7 +187,7 @@ class AnkiAppImporter:
             mw.col.models.add_template(model, template_dict)
             model["css"] = notetype.style
             mw.col.models.add(model)
-            notetype.id = model["id"]
+            notetype.mid = model["id"]
 
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing media..."))
         for media in self.media.values():
@@ -195,19 +201,15 @@ class AnkiAppImporter:
                 card.fields[field_name] = BLOB_REF_RE.sub(
                     lambda m: repl_blob_ref(self, m), contents
                 )
-            note_data = {
-                "deck": card.deck.id,
-                "model": card.notetype.id,
-                "fields": card.fields,
-                "tags": card.tags,
-            }
 
-            model = mw.col.models.get(note_data["model"])
+            assert card.notetype.mid is not None
+            model = cast(NotetypeDict, mw.col.models.get(card.notetype.mid))
             note = mw.col.new_note(model)
-            for field_name, contents in note_data["fields"].items():
+            for field_name, contents in card.fields.items():
                 note[field_name] = contents
-            note.set_tags_from_str("".join(note_data["tags"]))
-            mw.col.add_note(note, note_data["deck"])
+            note.set_tags_from_str("".join(card.tags))
+            assert card.deck.did is not None
+            mw.col.add_note(note, card.deck.did)
             notes_count += 1
 
         return notes_count

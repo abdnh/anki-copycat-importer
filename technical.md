@@ -183,6 +183,9 @@ Apparently decks can have tags too. This table stores each deck's tags:
 
 TODO
 
+| id  | device_id | timestamp | type | created_at | object_type | object_parameters |
+| --- | --------- | --------- | ---- | ---------- | ----------- | ----------------- |
+
 ### response_types
 
 TODO:

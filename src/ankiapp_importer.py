@@ -5,6 +5,7 @@ import html
 import re
 import base64
 from typing import Optional, cast, Set, Dict, List
+import json
 
 import aqt.editor
 from aqt.main import AnkiQt
@@ -16,8 +17,7 @@ class NoteType:
     def __init__(self, name: str, templates: str, style: str, fields: Set):
         self.mid: Optional[NotetypeId] = None  # Anki's notetype ID
         self.name = name
-        # Templates are stored as a string representation of a Python list, apparently
-        templates = eval(templates)
+        templates = json.loads(templates)
         self.front = self._fix_field_refs(templates[0])
         self.back = self._fix_field_refs(templates[1])
         self.style = style

@@ -11,6 +11,11 @@ AnkiAppImporter.ankiaddon: src/*
 check:
 	python -m mypy src
 
+# Install in testing profile
+install:
+	rm -rf src/__pycache__
+	cp -r src/. ankiprofile/addons21/AnkiAppImporter
+
 clean:
 	rm -f src/*.pyc
 	rm -f src/__pycache__

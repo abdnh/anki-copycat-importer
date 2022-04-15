@@ -76,7 +76,8 @@ class Media:
 
     # Work around guess_extension() not recognizing some file types
     extensions_for_mimes = {
-        "image/webp": ".webp"  # Not recognized on Windows without additional software (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
+        "image/webp": ".webp",  # Not recognized on Windows without additional software (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
+        "image/jp2": ".jp2",
     }
 
     def __init__(self, id: str, mime: str, data: bytes):

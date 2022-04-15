@@ -64,14 +64,6 @@ def fnameToLink(fname: str) -> str:
         return f"[sound:{html.escape(fname, quote=False)}]"
 
 
-BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
-
-
-def repl_blob_ref(importer, match) -> str:
-    blob_id = match.group(1)
-    return fnameToLink(importer.media[blob_id].filename)
-
-
 class Media:
 
     # Work around guess_extension() not recognizing some file types
@@ -102,6 +94,7 @@ class AnkiAppImporter:
         self._extract_decks()
         self._extract_media()
         self._extract_cards()
+        self.warnings: Set[str] = set()
 
     def _extract_notetypes(self):
         self.notetypes: Dict[bytes, NoteType] = {}
@@ -165,6 +158,17 @@ class AnkiAppImporter:
 
             self.cards[id] = Card(notetype, deck, fields, tags)
 
+    BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
+
+    def _repl_blob_ref(self, match) -> str:
+        blob_id = match.group(1)
+        try:
+            return fnameToLink(self.media[blob_id].filename)
+        except KeyError:
+            self.warnings.add(f"Missing media file: {blob_id}")
+            # dummy image ref
+            return f'<img src="{blob_id}.jpg"></img>'
+
     def import_to_anki(self, mw: "AnkiQt") -> int:
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing decks..."))
         for deck in self.decks.values():
@@ -201,8 +205,8 @@ class AnkiAppImporter:
         notes_count = 0
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
-                card.fields[field_name] = BLOB_REF_RE.sub(
-                    lambda m: repl_blob_ref(self, m), contents
+                card.fields[field_name] = self.BLOB_REF_RE.sub(
+                    lambda m: self._repl_blob_ref(m), contents
                 )
 
             assert card.notetype.mid is not None

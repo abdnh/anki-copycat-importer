@@ -3,7 +3,7 @@ from concurrent.futures import Future
 import aqt
 from aqt.qt import *
 from aqt.main import AnkiQt
-from aqt.utils import getFile, tooltip
+from aqt.utils import getFile, tooltip, showText
 from aqt.gui_hooks import main_window_did_init
 
 from .ankiapp_importer import AnkiAppImporter
@@ -18,12 +18,17 @@ def import_from_ankiapp(mw: AnkiQt, filename):
 
     def start_importing() -> int:
         importer = AnkiAppImporter(filename)
-        return importer.import_to_anki(mw)
+        return importer.import_to_anki(mw), importer.warnings
 
     def on_done(fut: Future) -> None:
         mw.progress.finish()
-        count = fut.result()
+        count, warnings = fut.result()
         tooltip(f"Successfully imported {count} card(s).")
+        if warnings:
+            showText(
+                f"The following issues were found:\n" + "\n".join(warnings),
+                title="AnkiApp Importer",
+            )
         mw.reset()
 
     mw.taskman.run_in_background(start_importing, on_done)

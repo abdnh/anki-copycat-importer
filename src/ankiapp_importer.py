@@ -5,7 +5,7 @@ import re
 import sqlite3
 import urllib
 from mimetypes import guess_extension
-from typing import Dict, List, Optional, Set, cast
+from typing import Dict, List, Match, Optional, Set, cast
 
 import aqt.editor
 from anki.decks import DeckDict, DeckId
@@ -88,7 +88,7 @@ class Media:
 
 
 class AnkiAppImporter:
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         self.con = sqlite3.connect(filename)
         self.cur = self.con.cursor()
         self._extract_notetypes()
@@ -97,7 +97,7 @@ class AnkiAppImporter:
         self._extract_cards()
         self.warnings: Set[str] = set()
 
-    def _extract_notetypes(self):
+    def _extract_notetypes(self) -> None:
         self.notetypes: Dict[bytes, NoteType] = {}
         for row in self.cur.execute("SELECT * FROM layouts"):
             ID, name, templates, style = row[:4]
@@ -110,7 +110,7 @@ class AnkiAppImporter:
 
             self.notetypes[ID] = NoteType(name, templates, style, fields)
 
-    def _extract_decks(self):
+    def _extract_decks(self) -> None:
         self.decks: Dict[bytes, Deck] = {}
         for row in self.cur.execute("SELECT * FROM decks"):
             ID = row[0]
@@ -118,7 +118,7 @@ class AnkiAppImporter:
             description = row[3]
             self.decks[ID] = Deck(name, description)
 
-    def _extract_media(self):
+    def _extract_media(self) -> None:
         self.media: Dict[str, Media] = {}
         for row in self.cur.execute("SELECT id, type, value FROM knol_blobs"):
             ID = str(row[0])
@@ -126,7 +126,7 @@ class AnkiAppImporter:
             data = row[2]
             self.media[ID] = Media(ID, mime, data)
 
-    def _extract_cards(self):
+    def _extract_cards(self) -> None:
         self.cards: Dict[bytes, Card] = {}
         for row in self.cur.execute("SELECT * FROM cards"):
             ID = row[0]
@@ -162,7 +162,7 @@ class AnkiAppImporter:
 
     BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
 
-    def _repl_blob_ref(self, match) -> str:
+    def _repl_blob_ref(self, match: Match[str]) -> str:
         blob_id = match.group(1)
         try:
             return fname_to_link(self.media[blob_id].filename)

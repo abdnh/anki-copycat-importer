@@ -10,7 +10,7 @@ from aqt.utils import getFile, showText, tooltip
 from .ankiapp_importer import AnkiAppImporter
 
 
-def import_from_ankiapp(mw: AnkiQt, filename):
+def import_from_ankiapp(mw: AnkiQt, filename: str) -> None:
     mw.progress.start(
         label="Extracting collection from AnkiApp database...",
         immediate=True,
@@ -35,7 +35,7 @@ def import_from_ankiapp(mw: AnkiQt, filename):
     mw.taskman.run_in_background(start_importing, on_done)
 
 
-def on_mw_init():
+def on_mw_init() -> None:
     if aqt.mw is not None:
         mw: AnkiQt = aqt.mw
         action = QAction(mw)

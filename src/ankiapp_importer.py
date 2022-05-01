@@ -1,16 +1,16 @@
-import sqlite3
-from mimetypes import guess_extension
-import urllib
-import html
-import re
 import base64
-from typing import Optional, cast, Set, Dict, List
+import html
 import json
+import re
+import sqlite3
+import urllib
+from mimetypes import guess_extension
+from typing import Dict, List, Optional, Set, cast
 
 import aqt.editor
-from aqt.main import AnkiQt
-from anki.decks import DeckId, DeckDict
+from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
+from aqt.main import AnkiQt
 
 
 class NoteType:
@@ -55,32 +55,33 @@ class Card:
 # https://github.com/ankitects/anki/blob/main/qt/aqt/editor.py
 
 
-def fnameToLink(fname: str) -> str:
+def fname_to_link(fname: str) -> str:
     ext = fname.split(".")[-1].lower()
     if ext in aqt.editor.pics:
         name = urllib.parse.quote(fname.encode("utf8"))
         return f'<img src="{name}">'
-    else:
-        return f"[sound:{html.escape(fname, quote=False)}]"
+    return f"[sound:{html.escape(fname, quote=False)}]"
 
 
 class Media:
 
     # Work around guess_extension() not recognizing some file types
     extensions_for_mimes = {
-        "image/webp": ".webp",  # Not recognized on Windows without additional software (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
+        # .webp is not recognized on Windows without additional software
+        # (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
+        "image/webp": ".webp",
         "image/jp2": ".jp2",
     }
 
-    def __init__(self, id: str, mime: str, data: bytes):
-        self.id = id
+    def __init__(self, ID: str, mime: str, data: bytes):
+        self.ID = ID
         self.mime = mime
         ext = guess_extension(mime)
         if not ext:
             try:
                 ext = self.extensions_for_mimes[mime]
-            except KeyError:
-                raise Exception(f"unrecognized mime type: {mime}")
+            except KeyError as exc:
+                raise Exception(f"unrecognized mime type: {mime}") from exc
         self.ext = cast(str, ext)
         self.data = base64.b64decode(data)
         self.filename: Optional[str] = None  # Filename in Anki
@@ -99,41 +100,41 @@ class AnkiAppImporter:
     def _extract_notetypes(self):
         self.notetypes: Dict[bytes, NoteType] = {}
         for row in self.cur.execute("SELECT * FROM layouts"):
-            id, name, templates, style = row[:4]
+            ID, name, templates, style = row[:4]
             fields = set()
             c = self.con.cursor()
-            for r in c.execute(
-                "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (id,)
+            for row in c.execute(
+                "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (ID,)
             ):
-                fields.add(r[0])
+                fields.add(row[0])
 
-            self.notetypes[id] = NoteType(name, templates, style, fields)
+            self.notetypes[ID] = NoteType(name, templates, style, fields)
 
     def _extract_decks(self):
         self.decks: Dict[bytes, Deck] = {}
         for row in self.cur.execute("SELECT * FROM decks"):
-            id = row[0]
+            ID = row[0]
             name = row[2]
             description = row[3]
-            self.decks[id] = Deck(name, description)
+            self.decks[ID] = Deck(name, description)
 
     def _extract_media(self):
-        self.media: Dict[bytes, Media] = {}
+        self.media: Dict[str, Media] = {}
         for row in self.cur.execute("SELECT id, type, value FROM knol_blobs"):
-            id = str(row[0])
+            ID = str(row[0])
             mime = row[1]
             data = row[2]
-            self.media[id] = Media(id, mime, data)
+            self.media[ID] = Media(ID, mime, data)
 
     def _extract_cards(self):
         self.cards: Dict[bytes, Card] = {}
         for row in self.cur.execute("SELECT * FROM cards"):
-            id = row[0]
+            ID = row[0]
             knol_id = row[1]
             layout_id = row[2]
             notetype = self.notetypes[layout_id]
             c = self.con.cursor()
-            c.execute("SELECT deck_id FROM cards_decks WHERE card_id = ?", (id,))
+            c.execute("SELECT deck_id FROM cards_decks WHERE card_id = ?", (ID,))
             deck = self.decks[c.fetchone()[0]]
             fields = {}
             for row in c.execute(
@@ -141,7 +142,8 @@ class AnkiAppImporter:
                 (knol_id,),
             ):
                 # NOTE: Filling empty fields for now to avoid errors on importing empty notes
-                # because I've not figured out yet a way to find the order of notetype fields (If any is kept by AnkiApp)
+                # because I've not figured out yet a way to find the order of notetype fields
+                # (If any is kept by AnkiApp)
                 fields[row[0]] = "&nbsp" if not row[1] else row[1]
             tags = [
                 r[0]
@@ -156,20 +158,20 @@ class AnkiAppImporter:
             # So we collect all field names we find here and update the notetype accordingly
             notetype.fields.update(fields.keys())
 
-            self.cards[id] = Card(notetype, deck, fields, tags)
+            self.cards[ID] = Card(notetype, deck, fields, tags)
 
     BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
 
     def _repl_blob_ref(self, match) -> str:
         blob_id = match.group(1)
         try:
-            return fnameToLink(self.media[blob_id].filename)
+            return fname_to_link(self.media[blob_id].filename)
         except KeyError:
             self.warnings.add(f"Missing media file: {blob_id}")
             # dummy image ref
             return f'<img src="{blob_id}.jpg"></img>'
 
-    def import_to_anki(self, mw: "AnkiQt") -> int:
+    def import_to_anki(self, mw: AnkiQt) -> int:
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing decks..."))
         for deck in self.decks.values():
             did = DeckId(mw.col.decks.add_normal_deck_with_name(deck.name).id)
@@ -198,7 +200,7 @@ class AnkiAppImporter:
 
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing media..."))
         for media in self.media.values():
-            filename = mw.col.media.write_data(media.id + media.ext, media.data)
+            filename = mw.col.media.write_data(media.ID + media.ext, media.data)
             media.filename = filename
 
         mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing cards..."))
@@ -206,7 +208,7 @@ class AnkiAppImporter:
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
                 card.fields[field_name] = self.BLOB_REF_RE.sub(
-                    lambda m: self._repl_blob_ref(m), contents
+                    self._repl_blob_ref, contents
                 )
 
             assert card.notetype.mid is not None

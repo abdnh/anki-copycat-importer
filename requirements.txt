@@ -1,3 +1,6 @@
 anki>=2.1.45
 aqt>=2.1.45
 mypy
+isort
+pylint
+black

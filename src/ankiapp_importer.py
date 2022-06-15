@@ -90,7 +90,6 @@ class Media:
 class AnkiAppImporter:
     def __init__(self, filename: str):
         self.con = sqlite3.connect(filename)
-        self.cur = self.con.cursor()
         self._extract_notetypes()
         self._extract_decks()
         self._extract_media()
@@ -99,11 +98,10 @@ class AnkiAppImporter:
 
     def _extract_notetypes(self) -> None:
         self.notetypes: Dict[bytes, NoteType] = {}
-        for row in self.cur.execute("SELECT * FROM layouts"):
+        for row in self.con.execute("SELECT * FROM layouts"):
             ID, name, templates, style = row[:4]
             fields = set()
-            c = self.con.cursor()
-            for row in c.execute(
+            for row in self.con.execute(
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (ID,)
             ):
                 fields.add(row[0])
@@ -112,7 +110,7 @@ class AnkiAppImporter:
 
     def _extract_decks(self) -> None:
         self.decks: Dict[bytes, Deck] = {}
-        for row in self.cur.execute("SELECT * FROM decks"):
+        for row in self.con.execute("SELECT * FROM decks"):
             ID = row[0]
             name = row[2]
             description = row[3]
@@ -120,7 +118,7 @@ class AnkiAppImporter:
 
     def _extract_media(self) -> None:
         self.media: Dict[str, Media] = {}
-        for row in self.cur.execute("SELECT id, type, value FROM knol_blobs"):
+        for row in self.con.execute("SELECT id, type, value FROM knol_blobs"):
             ID = str(row[0])
             mime = row[1]
             data = row[2]
@@ -128,16 +126,17 @@ class AnkiAppImporter:
 
     def _extract_cards(self) -> None:
         self.cards: Dict[bytes, Card] = {}
-        for row in self.cur.execute("SELECT * FROM cards"):
+        for row in self.con.execute("SELECT * FROM cards"):
             ID = row[0]
             knol_id = row[1]
             layout_id = row[2]
             notetype = self.notetypes[layout_id]
-            c = self.con.cursor()
-            c.execute("SELECT deck_id FROM cards_decks WHERE card_id = ?", (ID,))
-            deck = self.decks[c.fetchone()[0]]
+            deck_id = self.con.execute(
+                "SELECT deck_id FROM cards_decks WHERE card_id = ?", (ID,)
+            ).fetchone()[0]
+            deck = self.decks[deck_id]
             fields = {}
-            for row in c.execute(
+            for row in self.con.execute(
                 "SELECT knol_key_name, value FROM knol_values WHERE knol_id = ?",
                 (knol_id,),
             ):
@@ -147,7 +146,7 @@ class AnkiAppImporter:
                 fields[row[0]] = "&nbsp" if not row[1] else row[1]
             tags = [
                 r[0]
-                for r in c.execute(
+                for r in self.con.execute(
                     "SELECT tag_name FROM knols_tags WHERE knol_id = ?", (knol_id,)
                 )
             ]

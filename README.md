@@ -6,7 +6,7 @@ It appears that AnkiApp started to [paywall the deck export feature](https://www
 So you can no longer export a zip of your cards [without paying](https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/).
 
 This add-on salvages the cards from the SQLite database and was inspired by the Reddit post linked above.
-It imports cards, decks, note types, and media files.
+It can import cards, decks, note types, and media files.
 
 ## How to Use
 
@@ -28,4 +28,11 @@ It imports cards, decks, note types, and media files.
 - [AnkiApp - Support | Can I export my flashcards from AnkiApp?](https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/)
 
 ## TODO
+
 - [ ] tests
+
+## Support me
+
+Consider supporting me on Ko-fi or Patreon if you like my add-ons:
+
+<a href='https://ko-fi.com/U7U8AE997'><img height='36' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a> <a href="https://www.patreon.com/abdnh"><img height='36' src="https://i.imgur.com/mZBGpZ1.png"></a>

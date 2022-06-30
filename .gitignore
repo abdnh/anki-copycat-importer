@@ -1,3 +1,5 @@
 *.ankiaddon
 ankiprofile/
 venv/
+__pycache__/
+*.pyc

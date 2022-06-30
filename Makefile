@@ -1,4 +1,4 @@
-.PHONY: all zip install clean check pylint check check_format fix mypy pylint
+.PHONY: all zip clean check pylint check check_format fix mypy pylint
 all: zip
 
 zip: AnkiAppImporter.ankiaddon
@@ -7,11 +7,6 @@ AnkiAppImporter.ankiaddon: src/*
 	rm -f $@
 	rm -rf src/__pycache__
 	( cd src/; zip -r ../$@ * )
-
-# Install in testing profile
-install:
-	rm -rf src/__pycache__
-	cp -r src/. ankiprofile/addons21/AnkiAppImporter
 
 check: check_format mypy pylint
 

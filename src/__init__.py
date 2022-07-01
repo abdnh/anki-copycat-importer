@@ -5,7 +5,7 @@ import aqt
 from aqt.gui_hooks import main_window_did_init
 from aqt.main import AnkiQt
 from aqt.qt import *
-from aqt.utils import getFile, showText, tooltip
+from aqt.utils import getFile, showText, showWarning, tooltip
 
 from .ankiapp_importer import AnkiAppImporter
 
@@ -24,7 +24,18 @@ def import_from_ankiapp(mw: AnkiQt, filename: str) -> None:
     def on_done(fut: Future) -> None:
         mw.progress.finish()
         count, warnings = fut.result()
-        tooltip(f"Successfully imported {count} card(s).")
+        if count:
+            tooltip(f"Successfully imported {count} card(s).")
+        else:
+            showWarning(
+                """\
+No cards were found in your AnkiApp database. \
+Before using this add-on, please make sure you've downloaded the decks on your AnkiApp account by clicking \
+on the Download button shown when you select a deck in AnkiApp.
+            """,
+                parent=mw,
+                title="AnkiApp Importer",
+            )
         if warnings:
             showText(
                 "The following issues were found:\n" + "\n".join(warnings),

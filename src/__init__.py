@@ -59,6 +59,7 @@ def on_mw_init() -> None:
                 "AnkiApp database file to import",
                 key="AnkiAppImporter",
                 cb=lambda f: import_from_ankiapp(mw, f),
+                filter="*",
             ),
         )
 

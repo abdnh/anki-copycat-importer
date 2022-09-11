@@ -12,7 +12,7 @@ It can import cards, decks, note types, and media files.
 
 - Download the add-on from https://ankiweb.net/shared/info/2072125761
 - Make sure all your AnkiApp decks are downloaded before using the add-on. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.
-- Run Anki and go to **Tools > Import From AnkiApp** and choose AnkiApp's database file (`C:\Users\%USERNAME%\AppData\Roaming\AnkiApp\databases\file__0` on Windows; `~/Library/Application Support/AnkiApp/databases/file__0/1` on macOS).
+- Run Anki and go to **Tools > Import From AnkiApp** and choose AnkiApp's database file (`C:\Users\%USERNAME%\AppData\Roaming\AnkiApp\databases\file__0` on Windows; `~/Library/Application Support/AnkiApp/databases/file__0/1` or under `~/Library/Containers/com.ankiapp.client/Data/Documents/ankiapp` on macOS).
 - Grab a cup of coffee while waiting for importing to finish.
 
 ## Notes & Known Issues

@@ -4,3 +4,5 @@ mypy
 isort
 pylint
 black
+types-requests
+PyQt5-stubs

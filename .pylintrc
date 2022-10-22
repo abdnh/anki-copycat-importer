@@ -12,6 +12,7 @@ disable=
   redefined-outer-name,
   too-few-public-methods,
   too-many-locals,
+  broad-except,
 
 [BASIC]
 good-names =

@@ -1,16 +1,15 @@
 from concurrent.futures import Future
 from typing import Set, Tuple
 
-import aqt
+from aqt import mw
 from aqt.gui_hooks import main_window_did_init
-from aqt.main import AnkiQt
-from aqt.qt import *
+from aqt.qt import QAction, qconnect
 from aqt.utils import getFile, showText, showWarning, tooltip
 
 from .ankiapp_importer import AnkiAppImporter
 
 
-def import_from_ankiapp(mw: AnkiQt, filename: str) -> None:
+def import_from_ankiapp(filename: str) -> None:
     mw.progress.start(
         label="Extracting collection from AnkiApp database...",
         immediate=True,
@@ -47,21 +46,27 @@ on the Download button shown when you select a deck in AnkiApp.
 
 
 def on_mw_init() -> None:
-    if aqt.mw is not None:
-        mw: AnkiQt = aqt.mw
-        action = QAction(mw)
-        action.setText("Import From AnkiApp")
-        mw.form.menuTools.addAction(action)
-        qconnect(
-            action.triggered,
-            lambda: getFile(
-                mw,
-                "AnkiApp database file to import",
-                key="AnkiAppImporter",
-                cb=lambda f: import_from_ankiapp(mw, f),
-                filter="*",
-            ),
+    action = QAction(mw)
+    action.setText("Import From AnkiApp")
+    mw.form.menuTools.addAction(action)
+
+    def on_triggered() -> None:
+        file = getFile(
+            mw,
+            "AnkiApp database file to import",
+            key="AnkiAppImporter",
+            cb=None,
+            filter="*",
         )
+        if not file:
+            return
+        assert isinstance(file, str)
+        import_from_ankiapp(file)
+
+    qconnect(
+        action.triggered,
+        on_triggered,
+    )
 
 
 main_window_did_init.append(on_mw_init)

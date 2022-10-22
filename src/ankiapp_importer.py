@@ -87,7 +87,7 @@ class Media:
             except KeyError as exc:
                 raise Exception(f"unrecognized mime type: {mime}") from exc
         self.ext = cast(str, ext)
-        self.data = base64.b64decode(data)
+        self.data = data
         self.filename: Optional[str] = None  # Filename in Anki
 
     @classmethod
@@ -145,7 +145,7 @@ class AnkiAppImporter:
             ID = str(row[0])
             mime = row[1]
             data = row[2]
-            self.media[ID] = Media(ID, mime, data)
+            self.media[ID] = Media(ID, mime, base64.b64decode(data))
 
     def _extract_cards(self) -> None:
         self.cards: Dict[bytes, Card] = {}

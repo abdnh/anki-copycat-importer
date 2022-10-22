@@ -9,6 +9,8 @@ This add-on salvages the cards from the SQLite database and was inspired by the 
 <ul><li>Study progress is not imported.</li><li>AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause Anki to refuse to import its note if it happened to be imported as the first field. To prevent that, the add-on fills all empty fields with a non-breaking space.</li></ul>
 
 <b>Changelog</b>
+- 2022-10-22:
+  - Work around media importing not working for newer AnkiApp versions (tested on 6.1.0). Importing may take longer to complete, as the add-on now falls back to downloading media directly from AnkiApp's servers in case it can't find them in the local database.
 - 2022-07-01:
   - Add note about database file location on macOS and fix issue with the file not being selectable.
   - Add note about the download button in AnkiApp.

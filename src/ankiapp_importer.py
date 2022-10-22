@@ -8,6 +8,7 @@ from mimetypes import guess_extension
 from typing import Dict, List, Match, Optional, Set, cast
 
 import aqt.editor
+import requests
 from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
@@ -73,6 +74,9 @@ class Media:
         "image/jp2": ".jp2",
     }
 
+    # TODO: maybe explicitly close session after we finish
+    http_session = requests.Session()
+
     def __init__(self, ID: str, mime: str, data: bytes):
         self.ID = ID
         self.mime = mime
@@ -86,9 +90,28 @@ class Media:
         self.data = base64.b64decode(data)
         self.filename: Optional[str] = None  # Filename in Anki
 
+    @classmethod
+    def from_server(cls, blob_id: str) -> Optional["Media"]:
+        # AnkiApp exposes users' media files in the open - Do not tell anyone!
+        # We fall back to this method for files not found in the local database
+        # (e.g. in newer AnkiApp versions where files are stored in a separate IndexedDB folder with no apparent method connecting them to the blob IDs)
+        try:
+            with cls.http_session.get(
+                f"https://blobs.ankiapp.com/{blob_id}", timeout=30
+            ) as response:
+                response.raise_for_status()
+                data = response.content
+                mime = response.headers.get("content-type")
+                if not mime:
+                    return None
+                return Media(blob_id, mime, data)
+        except Exception:
+            return None
+
 
 class AnkiAppImporter:
-    def __init__(self, filename: str):
+    def __init__(self, mw: AnkiQt, filename: str):
+        self.mw = mw
         self.con = sqlite3.connect(filename)
         self._extract_notetypes()
         self._extract_decks()
@@ -163,46 +186,62 @@ class AnkiAppImporter:
 
     def _repl_blob_ref(self, match: Match[str]) -> str:
         blob_id = match.group(1)
-        try:
-            return fname_to_link(self.media[blob_id].filename)
-        except KeyError:
-            self.warnings.add(f"Missing media file: {blob_id}")
-            # dummy image ref
-            return f'<img src="{blob_id}.jpg"></img>'
+        if blob_id in self.media:
+            media_obj = self.media[blob_id]
+        else:
+            media_obj = Media.from_server(blob_id)
+            if media_obj:
+                filename = self.mw.col.media.write_data(
+                    media_obj.ID + media_obj.ext, media_obj.data
+                )
+                media_obj.filename = filename
+                self.media[media_obj.ID] = media_obj
+        if media_obj:
+            return fname_to_link(media_obj.filename)
+        self.warnings.add(f"Missing media file: {blob_id}")
+        # dummy image ref
+        return f'<img src="{blob_id}.jpg"></img>'
 
-    def import_to_anki(self, mw: AnkiQt) -> int:
-        mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing decks..."))
+    def import_to_anki(self) -> int:
+        self.mw.taskman.run_on_main(
+            lambda: self.mw.progress.update(label="Importing decks...")
+        )
         for deck in self.decks.values():
-            did = DeckId(mw.col.decks.add_normal_deck_with_name(deck.name).id)
+            did = DeckId(self.mw.col.decks.add_normal_deck_with_name(deck.name).id)
             deck.did = did
-            deck_dict = cast(DeckDict, mw.col.decks.get(did))
+            deck_dict = cast(DeckDict, self.mw.col.decks.get(did))
             if not deck_dict.get("desc"):
                 deck_dict["desc"] = deck.description
-                mw.col.decks.update_dict(deck_dict)
+                self.mw.col.decks.update_dict(deck_dict)
 
-        mw.taskman.run_on_main(
-            lambda: mw.progress.update(label="Importing notetypes...")
+        self.mw.taskman.run_on_main(
+            lambda: self.mw.progress.update(label="Importing notetypes...")
         )
         for notetype in self.notetypes.values():
-            model = mw.col.models.new(notetype.name)
-            mw.col.models.ensure_name_unique(model)
+            model = self.mw.col.models.new(notetype.name)
+            self.mw.col.models.ensure_name_unique(model)
             for field_name in notetype.fields:
-                field_dict = mw.col.models.new_field(field_name)
-                mw.col.models.add_field(model, field_dict)
-            template_dict = mw.col.models.new_template("Card 1")
+                field_dict = self.mw.col.models.new_field(field_name)
+                self.mw.col.models.add_field(model, field_dict)
+            template_dict = self.mw.col.models.new_template("Card 1")
             template_dict["qfmt"] = notetype.front
             template_dict["afmt"] = notetype.back
-            mw.col.models.add_template(model, template_dict)
+            self.mw.col.models.add_template(model, template_dict)
             model["css"] = notetype.style
-            mw.col.models.add(model)
+            self.mw.col.models.add(model)
             notetype.mid = model["id"]
 
-        mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing media..."))
+        self.mw.taskman.run_on_main(
+            lambda: self.mw.progress.update(label="Importing media...")
+        )
         for media in self.media.values():
-            filename = mw.col.media.write_data(media.ID + media.ext, media.data)
+            filename = self.mw.col.media.write_data(media.ID + media.ext, media.data)
             media.filename = filename
 
-        mw.taskman.run_on_main(lambda: mw.progress.update(label="Importing cards..."))
+        # TODO: maybe report media download progress
+        self.mw.taskman.run_on_main(
+            lambda: self.mw.progress.update(label="Importing cards...")
+        )
         notes_count = 0
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
@@ -211,13 +250,13 @@ class AnkiAppImporter:
                 )
 
             assert card.notetype.mid is not None
-            model = cast(NotetypeDict, mw.col.models.get(card.notetype.mid))
-            note = mw.col.new_note(model)
+            model = cast(NotetypeDict, self.mw.col.models.get(card.notetype.mid))
+            note = self.mw.col.new_note(model)
             for field_name, contents in card.fields.items():
                 note[field_name] = contents
             note.set_tags_from_str("".join(card.tags))
             assert card.deck.did is not None
-            mw.col.add_note(note, card.deck.did)
+            self.mw.col.add_note(note, card.deck.did)
             notes_count += 1
 
         return notes_count

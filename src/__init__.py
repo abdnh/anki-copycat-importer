@@ -18,8 +18,8 @@ def import_from_ankiapp(mw: AnkiQt, filename: str) -> None:
     mw.progress.set_title("AnkiApp Importer")
 
     def start_importing() -> Tuple[int, Set[str]]:
-        importer = AnkiAppImporter(filename)
-        return importer.import_to_anki(mw), importer.warnings
+        importer = AnkiAppImporter(mw, filename)
+        return importer.import_to_anki(), importer.warnings
 
     def on_done(fut: Future) -> None:
         mw.progress.finish()

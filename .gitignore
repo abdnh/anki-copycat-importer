@@ -1,5 +1,5 @@
 *.ankiaddon
-ankiprofile/
+ankidata/
 venv/
 __pycache__/
 *.pyc

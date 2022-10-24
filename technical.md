@@ -68,6 +68,9 @@ The IDs of media files are referenced in fields (knol_values->value columns) lik
 {{blob 1d8359fe48c04bebbbc52e2b0f7ed4d1}}
 ```
 
+NOTE: It appears that with recent AnkiApp versions (6.1.0), media files are [no longer stored](https://forums.ankiweb.net/t/ankiapp-importer/16734/52) in the `knol_blobs` table.
+Instead, they are stored as normal files separetely from the database file.
+
 ### layouts
 
 The `layouts` table has the following format:

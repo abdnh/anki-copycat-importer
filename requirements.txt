@@ -1,8 +1,8 @@
-anki>=2.1.45
-aqt>=2.1.45
-mypy
-isort
-pylint
-black
-types-requests
-PyQt5-stubs
+anki==2.1.45
+aqt==2.1.45
+mypy==0.982
+isort==5.10.1
+pylint==2.15.5
+black==22.10.0
+types-requests==2.28.11.2
+PyQt5-stubs==5.15.6.0

@@ -1,6 +1,6 @@
 # AnkiApp Importer
 
-An [Anki](https://apps.ankiweb.net/) add-on to import decks from the copycat AnkiApp (https://www.ankiapp.com/).
+An [Anki](https://apps.ankiweb.net/) add-on to import decks from the copycat [AnkiApp](https://www.ankiapp.com/).
 
 It appears that AnkiApp started to [paywall the deck export feature](https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/).
 So you can no longer export a zip of your cards [without paying](https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/).

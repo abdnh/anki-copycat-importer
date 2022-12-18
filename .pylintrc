@@ -13,6 +13,7 @@ disable=
   too-few-public-methods,
   too-many-locals,
   broad-except,
+  consider-using-f-string,
 
 [BASIC]
 good-names =

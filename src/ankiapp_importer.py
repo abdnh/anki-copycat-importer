@@ -4,8 +4,9 @@ import json
 import re
 import sqlite3
 import urllib
+from collections.abc import MutableSet
 from mimetypes import guess_extension
-from typing import Dict, List, Match, Optional, Set, cast
+from typing import Any, Dict, Iterator, List, Match, Optional, Set, cast
 
 import aqt.editor
 import requests
@@ -14,20 +15,75 @@ from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
 
 
+class FieldSet(Set, MutableSet):
+    """A set to hold field names in a case-insensitive manner.
+    Used to work around some databases containing multiple field names belonging
+    to the same layout and only differing in case, which can't be imported to Anki as they are.
+    """
+
+    def __init__(self) -> None:
+        self.elements: Set[str] = set()
+        super().__init__()
+
+    def add(self, value: str) -> None:
+        if value not in self:
+            self.elements.add(value)
+
+    def discard(self, value: str) -> None:
+        for item in self.elements:
+            if item.lower() == value.lower():
+                self.elements.discard(item)
+                return
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.elements)
+
+    def __len__(self) -> int:
+        return len(self.elements)
+
+    def __contains__(self, value: Any) -> bool:
+        for item in self.elements:
+            if item.lower() == value.lower():
+                return True
+        return False
+
+    def normalize(self, value: str) -> str:
+        """Return `value` as stored in the set if it exists, otherwise return it as it is"""
+        for item in self.elements:
+            if item.lower() == value.lower():
+                return item
+        return value
+
+
 class NoteType:
-    def __init__(self, name: str, templates: str, style: str, fields: Set):
+    def __init__(self, name: str, templates: str, style: str, fields: FieldSet):
         self.mid: Optional[NotetypeId] = None  # Anki's notetype ID
         self.name = name
-        templates = json.loads(templates)
-        self.front = self._fix_field_refs(templates[0])
-        self.back = self._fix_field_refs(templates[1])
+        self._raw_templates = json.loads(templates)
         self.style = style
         self.fields = fields
 
-    def _fix_field_refs(self, template: str) -> str:
-        # AnkiApp uses `{{[FieldName]}}`
+    def _process_template(self, template: str) -> str:
+        # Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`
         # FIXME: use a regex instead?
-        return template.replace("{{[", "{{").replace("]}}", "}}")
+        template = template.replace("{{[", "{{").replace("]}}", "}}")
+        # Unlike Anki, AnkiApp uses case-insensitive references, so we need to fix them
+        for field in self.fields:
+            template = re.sub(
+                r"\{\{%s\}\}" % re.escape(field),
+                "{{%s}}" % field,
+                template,
+                flags=re.IGNORECASE,
+            )
+        return template
+
+    @property
+    def front(self) -> str:
+        return self._process_template(self._raw_templates[0])
+
+    @property
+    def back(self) -> str:
+        return self._process_template(self._raw_templates[1])
 
     def __repr__(self) -> str:
         return f"NoteType({self.name})"
@@ -123,7 +179,7 @@ class AnkiAppImporter:
         self.notetypes: Dict[bytes, NoteType] = {}
         for row in self.con.execute("SELECT * FROM layouts"):
             ID, name, templates, style = row[:4]
-            fields = set()
+            fields = FieldSet()
             for row in self.con.execute(
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (ID,)
             ):
@@ -166,7 +222,9 @@ class AnkiAppImporter:
                 # NOTE: Filling empty fields for now to avoid errors on importing empty notes
                 # because I've not figured out yet a way to find the order of notetype fields
                 # (If any is kept by AnkiApp)
-                fields[row[0]] = "&nbsp" if not row[1] else row[1]
+                fields[notetype.fields.normalize(row[0])] = (
+                    "&nbsp" if not row[1] else row[1]
+                )
             tags = [
                 r[0]
                 for r in self.con.execute(

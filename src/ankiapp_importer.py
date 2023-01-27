@@ -15,7 +15,7 @@ from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
 
 
-class FieldSet(Set, MutableSet):
+class FieldSet(MutableSet):
     """A set to hold field names in a case-insensitive manner.
     Used to work around some databases containing multiple field names belonging
     to the same layout and only differing in case, which can't be imported to Anki as they are.
@@ -236,7 +236,7 @@ class AnkiAppImporter:
             # knol_keys_layouts (processed in _extract_notetypes) even though
             # they have knol_values entries.
             # So we collect all field names we find here and update the notetype accordingly
-            notetype.fields.update(fields.keys())
+            notetype.fields |= fields.keys()
 
             self.cards[ID] = Card(notetype, deck, fields, tags)
 

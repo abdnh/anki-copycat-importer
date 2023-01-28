@@ -168,6 +168,7 @@ class Media:
 class AnkiAppImporter:
     def __init__(self, mw: AnkiQt, filename: str):
         self.mw = mw
+        self.config = mw.addonManager.getConfig(__name__)
         self.con = sqlite3.connect(filename)
         self._extract_notetypes()
         self._extract_decks()
@@ -244,9 +245,10 @@ class AnkiAppImporter:
 
     def _repl_blob_ref(self, match: Match[str]) -> str:
         blob_id = match.group(1)
+        media_obj = None
         if blob_id in self.media:
             media_obj = self.media[blob_id]
-        else:
+        elif self.config["remote_media"]:
             media_obj = Media.from_server(blob_id)
             if media_obj:
                 filename = self.mw.col.media.write_data(

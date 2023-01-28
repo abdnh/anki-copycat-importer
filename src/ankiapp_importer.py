@@ -3,6 +3,7 @@ import html
 import json
 import re
 import sqlite3
+import time
 import urllib
 from collections.abc import MutableSet
 from mimetypes import guess_extension
@@ -165,6 +166,14 @@ class Media:
             return None
 
 
+class AnkiAppImporterException(Exception):
+    pass
+
+
+class AnkiAppImporterCanceledException(AnkiAppImporterException):
+    pass
+
+
 class AnkiAppImporter:
     def __init__(self, mw: AnkiQt, filename: str):
         self.mw = mw
@@ -176,8 +185,22 @@ class AnkiAppImporter:
         self._extract_cards()
         self.warnings: Set[str] = set()
 
+    def _cancel_if_needed(self) -> None:
+        if self.mw.progress.want_cancel():
+            raise AnkiAppImporterCanceledException
+
+    def _update_progress(
+        self, label: str, value: Optional[int] = None, max: Optional[int] = None
+    ) -> None:
+        def on_main() -> None:
+            self.mw.progress.update(label=label, value=value, max=max)
+
+        self.mw.taskman.run_on_main(on_main)
+        self._cancel_if_needed()
+
     def _extract_notetypes(self) -> None:
         self.notetypes: Dict[bytes, NoteType] = {}
+        self._update_progress("Extracting notetypes...")
         for row in self.con.execute("SELECT * FROM layouts"):
             ID, name, templates, style = row[:4]
             fields = FieldSet()
@@ -187,25 +210,31 @@ class AnkiAppImporter:
                 fields.add(row[0])
 
             self.notetypes[ID] = NoteType(name, templates, style, fields)
+            self._cancel_if_needed()
 
     def _extract_decks(self) -> None:
         self.decks: Dict[bytes, Deck] = {}
+        self._update_progress("Extracting decks...")
         for row in self.con.execute("SELECT * FROM decks"):
             ID = row[0]
             name = row[2]
             description = row[3]
             self.decks[ID] = Deck(name, description)
+            self._cancel_if_needed()
 
     def _extract_media(self) -> None:
         self.media: Dict[str, Media] = {}
+        self._update_progress("Extracting media...")
         for row in self.con.execute("SELECT id, type, value FROM knol_blobs"):
             ID = str(row[0])
             mime = row[1]
             data = row[2]
             self.media[ID] = Media(ID, mime, base64.b64decode(data))
+            self._cancel_if_needed()
 
     def _extract_cards(self) -> None:
         self.cards: Dict[bytes, Card] = {}
+        self._update_progress("Extracting cards...")
         for row in self.con.execute("SELECT * FROM cards"):
             ID = row[0]
             knol_id = row[1]
@@ -240,6 +269,7 @@ class AnkiAppImporter:
             notetype.fields |= fields.keys()
 
             self.cards[ID] = Card(notetype, deck, fields, tags)
+            self._cancel_if_needed()
 
     BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
 
@@ -263,9 +293,7 @@ class AnkiAppImporter:
         return f'<img src="{blob_id}.jpg"></img>'
 
     def import_to_anki(self) -> int:
-        self.mw.taskman.run_on_main(
-            lambda: self.mw.progress.update(label="Importing decks...")
-        )
+        self._update_progress("Importing decks...")
         for deck in self.decks.values():
             did = DeckId(self.mw.col.decks.add_normal_deck_with_name(deck.name).id)
             deck.did = did
@@ -274,9 +302,7 @@ class AnkiAppImporter:
                 deck_dict["desc"] = deck.description
                 self.mw.col.decks.update_dict(deck_dict)
 
-        self.mw.taskman.run_on_main(
-            lambda: self.mw.progress.update(label="Importing notetypes...")
-        )
+        self._update_progress("Importing notetypes...")
         for notetype in self.notetypes.values():
             model = self.mw.col.models.new(notetype.name)
             self.mw.col.models.ensure_name_unique(model)
@@ -291,18 +317,15 @@ class AnkiAppImporter:
             self.mw.col.models.add(model)
             notetype.mid = model["id"]
 
-        self.mw.taskman.run_on_main(
-            lambda: self.mw.progress.update(label="Importing media...")
-        )
+        self._update_progress("Importing media...")
         for media in self.media.values():
             filename = self.mw.col.media.write_data(media.ID + media.ext, media.data)
             media.filename = filename
 
-        # TODO: maybe report media download progress
-        self.mw.taskman.run_on_main(
-            lambda: self.mw.progress.update(label="Importing cards...")
-        )
+        self._update_progress("Importing cards...")
+        last_progress = 0.0
         notes_count = 0
+
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
                 card.fields[field_name] = self.BLOB_REF_RE.sub(
@@ -314,9 +337,16 @@ class AnkiAppImporter:
             note = self.mw.col.new_note(model)
             for field_name, contents in card.fields.items():
                 note[field_name] = contents
-            note.set_tags_from_str("".join(card.tags))
+            note.tags = card.tags
             assert card.deck.did is not None
             self.mw.col.add_note(note, card.deck.did)
             notes_count += 1
+            if time.time() - last_progress >= 0.1:
+                self._update_progress(
+                    label=f"Imported {notes_count} out of {len(self.cards)} cards",
+                    value=notes_count,
+                    max=len(self.cards),
+                )
+                last_progress = time.time()
 
         return notes_count

@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Fixed AnkiApp database file not being selectable in macOS's file selector.
 
+### Added
+
+-   Added a note about empty collections.
+
 ## [1.3.0] - 2022-04-15
 
 ### Added

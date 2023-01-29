@@ -8,22 +8,6 @@ This add-on salvages the cards from the SQLite database and was inspired by the 
 <b>Notes & Known Issues</b>
 <ul><li>Study progress is not imported.</li><li>AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause Anki to refuse to import its note if it happened to be imported as the first field. To prevent that, the add-on fills all empty fields with a non-breaking space.</li></ul>
 
-<b>Changelog</b>
-- 2022-12-19:
-  - Fix issue with AnkiApp templates containing field references that differ in case from how the fields are actually named.
-- 2022-10-22:
-  - Work around media importing not working for newer AnkiApp versions (tested on 6.1.0). Importing may take longer to complete, as the add-on now falls back to downloading media directly from AnkiApp's servers in case it can't find them in the local database. See this <a href="https://forums.ankiweb.net/t/ankiapp-importer/16734/39">forum post</a>.
-- 2022-07-01:
-  - Add note about database file location on macOS and fix issue with the file not being selectable.
-  - Add note about the download button in AnkiApp.
-- 2022-04-15: Handle missing media files and warn about them.
-- 2022-03-5:
-  - Show progress dialog and the number of imported notes.
-  - Fix for some image formats not being recognized.
-  - Fix import error on some collections.
-- 2022-01-21: Import deck description.
-- 2022-01-17: Initial release.
-
 <b>References</b>
 <ul><li><a href="https://faqs.ankiweb.net/ankiapp-is-not-part-of-the-anki-ecosystem.html">AnkiApp is not part of the Anki ecosystem - Frequently Asked Questions</a> (with some notes about importing if you have a zip file)</li><li><a href="https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/">Help to bypass Ankiapp's paywall for deck export : Anki | Reddit</a></li><li><a href="https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/">AnkiApp - Support | Can I export my flashcards from AnkiApp?</a></li></ul>
 

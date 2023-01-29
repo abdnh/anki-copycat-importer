@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2023-01-29
+
+### Added
+
+-   Add a config option to disable remote media fetching.
+-   Allow cancelling importing and implement more detailed progress updates.
+
+### Fixed
+
+-   Fix a regression when there are missing (but used) fields in the layouts table.
+-   Try to handle notetypes with missing templates by converting their notes to basic ones.
+
 ## [1.4.1] - 2022-12-19
 
 ### Fixed
@@ -55,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
+[1.5.0]: https://github.com/abdnh/AnkiApp-importer/compare/1.4.1...1.5.0
 [1.4.1]: https://github.com/abdnh/AnkiApp-importer/compare/1.4.0...1.4.1
 [1.4.0]: https://github.com/abdnh/AnkiApp-importer/compare/1.3.1...1.4.0
 [1.3.1]: https://github.com/abdnh/AnkiApp-importer/compare/1.3.0...1.3.1

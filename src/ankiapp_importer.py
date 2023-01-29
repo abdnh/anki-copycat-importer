@@ -14,6 +14,7 @@ import requests
 from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
+from aqt.utils import tr
 
 
 class FieldSet(MutableSet):
@@ -85,6 +86,10 @@ class NoteType:
     @property
     def back(self) -> str:
         return self._process_template(self._raw_templates[1])
+
+    def is_invalid(self) -> bool:
+        """Check whether the notetype is missing templates."""
+        return len(self._raw_templates) < 2
 
     def __repr__(self) -> str:
         return f"NoteType({self.name})"
@@ -304,6 +309,11 @@ class AnkiAppImporter:
 
         self._update_progress("Importing notetypes...")
         for notetype in self.notetypes.values():
+            if notetype.is_invalid():
+                notetype.mid = self.mw.col.models.by_name(tr.notetypes_basic_name())[
+                    "id"
+                ]
+                continue
             model = self.mw.col.models.new(notetype.name)
             self.mw.col.models.ensure_name_unique(model)
             for field_name in notetype.fields:

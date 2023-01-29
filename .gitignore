@@ -3,3 +3,6 @@ ankidata/
 venv/
 __pycache__/
 *.pyc
+src/meta.json
+samples/
+TODO.md

@@ -7,7 +7,7 @@ import time
 import urllib
 from collections.abc import MutableSet
 from mimetypes import guess_extension
-from typing import Any, Dict, Iterator, List, Match, Optional, Set, cast
+from typing import Any, Dict, Iterable, Iterator, List, Match, Optional, Set, cast
 
 import aqt.editor
 import requests
@@ -23,9 +23,12 @@ class FieldSet(MutableSet):
     to the same layout and only differing in case, which can't be imported to Anki as they are.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, iterable: Optional[Iterable] = None) -> None:
         self.elements: Set[str] = set()
         super().__init__()
+        if iterable:
+            for el in iterable:
+                self.add(el)
 
     def add(self, value: str) -> None:
         if value not in self:
@@ -93,6 +96,46 @@ class NoteType:
 
     def __repr__(self) -> str:
         return f"NoteType({self.name})"
+
+
+class FallbackNotetype(NoteType):
+    def __init__(self, name: str, front: str, back: str, style: str, fields: FieldSet):
+        self.mid: Optional[NotetypeId] = None
+        self.name = name
+        self._front = front
+        self._back = back
+        self.style = style
+        self.fields = fields
+
+    @property
+    def front(self) -> str:
+        return self._front
+
+    @property
+    def back(self) -> str:
+        return self._back
+
+
+BASIC_NOTETYPE = FallbackNotetype(
+    "Basic",
+    """{{Front}}""",
+    """\
+{{FrontSide}}
+
+<hr id=answer>
+
+{{Back}}""",
+    """\
+.card {
+    font-family: arial;
+    font-size: 20px;
+    text-align: center;
+    color: black;
+    background-color: white;
+}
+""",
+    FieldSet(["Front", "Back"]),
+)
 
 
 class Deck:
@@ -244,7 +287,11 @@ class AnkiAppImporter:
             ID = row[0]
             knol_id = row[1]
             layout_id = row[2]
-            notetype = self.notetypes[layout_id]
+            notetype = (
+                self.notetypes[layout_id]
+                if not self.notetypes[layout_id].is_invalid()
+                else BASIC_NOTETYPE
+            )
             deck_id = self.con.execute(
                 "SELECT deck_id FROM cards_decks WHERE card_id = ?", (ID,)
             ).fetchone()[0]
@@ -310,12 +357,13 @@ class AnkiAppImporter:
         self._update_progress("Importing notetypes...")
         for notetype in self.notetypes.values():
             if notetype.is_invalid():
-                notetype.mid = self.mw.col.models.by_name(tr.notetypes_basic_name())[
-                    "id"
-                ]
-                continue
+                model = self.mw.col.models.by_name("Basic")
+                if model:
+                    notetype.mid = model["id"]
+                    continue
+                else:
+                    notetype = BASIC_NOTETYPE
             model = self.mw.col.models.new(notetype.name)
-            self.mw.col.models.ensure_name_unique(model)
             for field_name in notetype.fields:
                 field_dict = self.mw.col.models.new_field(field_name)
                 self.mw.col.models.add_field(model, field_dict)

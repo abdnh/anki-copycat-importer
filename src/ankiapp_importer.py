@@ -150,9 +150,9 @@ class Deck:
 
 class Card:
     def __init__(
-        self, notetype: NoteType, deck: Deck, fields: Dict[str, str], tags: List[str]
+        self, layout_id: bytes, deck: Deck, fields: Dict[str, str], tags: List[str]
     ):
-        self.notetype = notetype
+        self.layout_id = layout_id
         self.deck = deck
         self.fields = fields
         self.tags = tags
@@ -320,7 +320,7 @@ class AnkiAppImporter:
             # So we collect all field names we find here and update the notetype accordingly
             notetype.fields |= fields.keys()
 
-            self.cards[ID] = Card(notetype, deck, fields, tags)
+            self.cards[ID] = Card(layout_id, deck, fields, tags)
             self._cancel_if_needed()
 
     BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
@@ -390,8 +390,10 @@ class AnkiAppImporter:
                     self._repl_blob_ref, contents
                 )
 
-            assert card.notetype.mid is not None
-            model = cast(NotetypeDict, self.mw.col.models.get(card.notetype.mid))
+            notetype = self.notetypes[card.layout_id]
+            assert notetype.mid is not None
+            model = cast(NotetypeDict, self.mw.col.models.get(notetype.mid))
+            assert model is not None
             note = self.mw.col.new_note(model)
             for field_name, contents in card.fields.items():
                 note[field_name] = contents

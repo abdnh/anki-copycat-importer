@@ -75,8 +75,8 @@ class NoteType:
         # Unlike Anki, AnkiApp uses case-insensitive references, so we need to fix them
         for field in self.fields:
             template = re.sub(
-                r"\{\{%s\}\}" % re.escape(field),
-                "{{%s}}" % field,
+                r"\{\{(#|/|^)?%s\}\}" % re.escape(field),
+                "{{\\1%s}}" % field,
                 template,
                 flags=re.IGNORECASE,
             )

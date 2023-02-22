@@ -106,13 +106,27 @@ class NoteType:
 
 
 class FallbackNotetype(NoteType):
-    def __init__(self, name: str, front: str, back: str, style: str, fields: FieldSet):
+    def __init__(self, extra_fields: FieldSet) -> None:
         self.mid: Optional[NotetypeId] = None
-        self.name = name
-        self._front = front
-        self._back = back
-        self.style = style
-        self.fields = fields
+        self.name = "AnkiApp Fallback Notetype"
+        self._front = """{{Front}}"""
+        self._back = """\
+{{FrontSide}}
+
+<hr id=answer>
+
+{{Back}}"""
+        self.style = """\
+.card {
+    font-family: arial;
+    font-size: 20px;
+    text-align: center;
+    color: black;
+    background-color: white;
+}
+"""
+        self.fields = FieldSet(["Front", "Back"])
+        self.fields |= extra_fields
 
     @property
     def front(self) -> str:
@@ -121,28 +135,6 @@ class FallbackNotetype(NoteType):
     @property
     def back(self) -> str:
         return self._back
-
-
-BASIC_NOTETYPE = FallbackNotetype(
-    "Basic",
-    """{{Front}}""",
-    """\
-{{FrontSide}}
-
-<hr id=answer>
-
-{{Back}}""",
-    """\
-.card {
-    font-family: arial;
-    font-size: 20px;
-    text-align: center;
-    color: black;
-    background-color: white;
-}
-""",
-    FieldSet(["Front", "Back"]),
-)
 
 
 class Deck:
@@ -263,8 +255,10 @@ class AnkiAppImporter:
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (ID,)
             ):
                 fields.add(row[0])
-
-            self.notetypes[ID] = NoteType(name, templates, style, fields)
+            notetype = NoteType(name, templates, style, fields)
+            if notetype.is_invalid():
+                notetype = FallbackNotetype(fields)
+            self.notetypes[ID] = notetype
             self._cancel_if_needed()
 
     def _extract_decks(self) -> None:
@@ -294,11 +288,7 @@ class AnkiAppImporter:
             ID = row[0]
             knol_id = row[1]
             layout_id = row[2]
-            notetype = (
-                self.notetypes[layout_id]
-                if not self.notetypes[layout_id].is_invalid()
-                else BASIC_NOTETYPE
-            )
+            notetype = self.notetypes[layout_id]
             deck_id = self.con.execute(
                 "SELECT deck_id FROM cards_decks WHERE card_id = ?", (ID,)
             ).fetchone()[0]
@@ -363,13 +353,6 @@ class AnkiAppImporter:
 
         self._update_progress("Importing notetypes...")
         for notetype in self.notetypes.values():
-            if notetype.is_invalid():
-                model = self.mw.col.models.by_name("Basic")
-                if model:
-                    notetype.mid = model["id"]
-                    continue
-                else:
-                    notetype = BASIC_NOTETYPE
             model = self.mw.col.models.new(notetype.name)
             for field_name in notetype.fields:
                 field_dict = self.mw.col.models.new_field(field_name)

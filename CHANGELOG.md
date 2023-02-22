@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2023-02-22
+
+### Fixed
+
+-   Handle conditional field references.
+-   Handle invalid characters in field names (e.g. `:"{}]`)
+-   Improve handling of notetypes with empty templates. You may notice notetypes with names starting with "AnkiApp Fallback Notetype" after importing. You may need to modify the templates of such notetypes according to your fields as basic templates are used as a fallback.
+
 ## [1.5.2] - 2023-02-16
 
 ### Fixed
@@ -79,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
-
+[1.5.3]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.2...1.5.3
 [1.5.2]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.1...1.5.2
 [1.5.1]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.0...1.5.1
 [1.5.0]: https://github.com/abdnh/AnkiApp-importer/compare/1.4.1...1.5.0

@@ -14,7 +14,14 @@ import requests
 from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
-from aqt.utils import tr
+
+INVALID_FIELD_CHARS_RE = re.compile('[:"{}]')
+
+# Must match fix_name in fields.rs: https://github.com/ankitects/anki/blob/404a6c5d4a5fd908a20d8cbdb003c1204e10c0ce/rslib/src/notetype/fields.rs#L55
+def fix_field_name(text: str) -> str:
+    text = text.strip()
+    text = text.lstrip("#/^")
+    return INVALID_FIELD_CHARS_RE.sub("", text)
 
 
 class FieldSet(MutableSet):
@@ -76,7 +83,7 @@ class NoteType:
         for field in self.fields:
             template = re.sub(
                 r"\{\{(#|/|^)?%s\}\}" % re.escape(field),
-                "{{\\1%s}}" % field,
+                "{{\\1%s}}" % fix_field_name(field),
                 template,
                 flags=re.IGNORECASE,
             )
@@ -396,7 +403,7 @@ class AnkiAppImporter:
             assert model is not None
             note = self.mw.col.new_note(model)
             for field_name, contents in card.fields.items():
-                note[field_name] = contents
+                note[fix_field_name(field_name)] = contents
             note.tags = card.tags
             assert card.deck.did is not None
             self.mw.col.add_note(note, card.deck.did)

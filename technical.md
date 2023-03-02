@@ -1,11 +1,11 @@
-Some incomplete notes about AnkiApp's database schema.
+Some incomplete notes about AnkiApp's internals.
 
 ## Terminology
 
 AnkiApp's uses familiar terms like decks, cards, and tags, with some differences:
 
-- `knol`: a "knol" can be thought of as the counterpart of a note in Anki.[^1]
-- `layout`: a layout is like a notetype with a single card type in Anki.
+-   `knol`: a "knol" can be thought of as the counterpart of a note in Anki.[^1]
+-   `layout`: a layout is like a notetype with a single card type in Anki.
 
 ## Tables
 
@@ -58,9 +58,9 @@ This table stores media files:
 | 46872580a15d4fdda1931bd54f2d08af | 0d783dc044024ee1adfafd707c1af9e2 | image/jpeg | /9j/4AAQSk... |
 | 708c2c0cac1641df881ed6ba8a2f1e0c | 7a8b667a277c4bf8b55e81cc5c88c4dd | image/webp | UklGR...      |
 
-- `knol_value_id`: the ID of the `knol_values` row where the media file is used (which implies that there can be duplicate files with the exact same contents used in different fields or notes.)
-- `type`: the [MIME type](https://en.wikipedia.org/wiki/Media_type) of the file.
-- `value`: the Base64-encoded contents of the file.
+-   `knol_value_id`: the ID of the `knol_values` row where the media file is used (which implies that there can be duplicate files with the exact same contents used in different fields or notes.)
+-   `type`: the [MIME type](https://en.wikipedia.org/wiki/Media_type) of the file.
+-   `value`: the Base64-encoded contents of the file.
 
 The IDs of media files are referenced in fields (knol_values->value columns) like this:
 
@@ -80,10 +80,10 @@ The `layouts` table has the following format:
 | acf3bd5e3fc94d64a9b21d7a531a6563 | Front-to-Back | `["<div>{{Front}}</div>","<div>{{front}}</div><hr/><div>{{Back}}</div>"]` | `div { font-size: x-large; }` | 5b4f816026f511e2aac3001e52fffe46 | 0      |
 | a4abf3245c0340c39e43216fcd714dfc | Translation   | `["<div>{{Word}}</div>","<div>{{Translation}}</div>"]`                    | `div { font-size: x-large; }` | 5b4f816026f511e2aac3001e52fffe46 | 0      |
 
-- `templates`: the front and back templates stored as a string representation of a Python list (apparently).
-- `style`: CSS styles
-- `response_type_id`: TODO
-- `status`: TODO
+-   `templates`: the front and back templates stored as a string representation of a Python list (apparently).
+-   `style`: CSS styles
+-   `response_type_id`: TODO
+-   `status`: TODO
 
 ### knol_keys_layouts
 
@@ -115,9 +115,9 @@ The `decks` table has the following format:
 | a4dde94984644cf3a749a1898e47261c | 1      | Geography Trivia |                    | 2020-06-28T21:17:30.239Z | 2020-06-28T21:17:30.239Z | 8fe1b4d10fbf403f875b53645bb0bd7e |
 | 3662fdc90bfe4a86b11499101b298ecd | 1      | English          | English Vocabulary | 2020-07-13T17:14:10.219Z | 2020-07-13T17:14:10.219Z | a4abf3245c0340c39e43216fcd714dfc |
 
-- `status`: TODO
-- `created_at` and `modified_at` are UTC times in the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.
-- `layout_id`: AnkiApp associates each deck with a single layout, so moving cards from one deck to another with a different layout [can cause problems](https://forums.ankiweb.net/t/ankiapp-importer/16734/14).
+-   `status`: TODO
+-   `created_at` and `modified_at` are UTC times in the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.
+-   `layout_id`: AnkiApp associates each deck with a single layout, so moving cards from one deck to another with a different layout [can cause problems](https://forums.ankiweb.net/t/ankiapp-importer/16734/14).
 
 ### cards
 
@@ -130,10 +130,10 @@ Cards are stored in the following format:
 
 Most of the columns should be self-explanatory at this point, except:
 
-- `score_mean`: TODO
-- `score_standard_deviation`: TODO
-- `last_response_at`: date of last review.
-- `num_responses`: number of reviews of this card.
+-   `score_mean`: TODO
+-   `score_standard_deviation`: TODO
+-   `last_response_at`: date of last review.
+-   `num_responses`: number of reviews of this card.
 
 ### cards_decks
 
@@ -218,3 +218,24 @@ TODO: this is apparently has something to do with shared decks?
 | 3662fdc90bfe4a86b11499101b298ecd | 2020-07-13T17:14:10.219Z | English   |                  | deadbeefdeadbeefdeadbeefdeadbeef |
 
 [^1]: "knol" is probably a reference to [Knol](https://en.wikipedia.org/wiki/Knol).
+
+## Security
+
+### Media
+
+AnkiApp leaves users' media files exposed on its servers. Given a blob ID like 2e0957ca348e4e6ab480871628e59622,
+the media file can be downloaded by simply accessing the URL https://blobs.ankiapp.com/2e0957ca348e4e6ab480871628e59622.
+
+More context: https://forums.ankiweb.net/t/ankiapp-importer/16734/52
+
+## API
+
+Notes about the AnkiApp's API accessible from https://api.ankiapp.com
+
+TODO: investigate using the API as an alternative method for importing.
+
+### Cards data
+
+Knol values are fetched by initiating a request like this:
+
+https://api.ankiapp.com/decks/{deck_id}/knols/{knol_id}?client_version={ankiapp_version}&client_id={client_id}&t={token}

@@ -293,17 +293,18 @@ class AnkiAppImporter:
             notetype = self.notetypes[layout_id]
             deck_id = row[3]
             deck = self.decks[deck_id]
-            fields = {}
+            fields: Dict[str, str] = {}
             for row in self.con.execute(
                 "SELECT knol_key_name, value FROM knol_values WHERE knol_id = ?",
                 (knol_id,),
             ):
-                # NOTE: Filling empty fields for now to avoid errors on importing empty notes
-                # because I've not figured out yet a way to find the order of notetype fields
-                # (If any is kept by AnkiApp)
-                fields[notetype.fields.normalize(row[0])] = (
-                    "&nbsp" if not row[1] else row[1]
-                )
+                field_name = notetype.fields.normalize(row[0])
+                # Avoid overriding previously processed non-empty fields differing only in case
+                if not fields.get(field_name, "").strip():
+                    # NOTE: Filling empty fields with a non-breaking space for now to avoid errors on importing empty notes
+                    # because I've not figured out yet a way to find the order of notetype fields
+                    # (If any is kept by AnkiApp)
+                    fields[field_name] = "&nbsp" if not row[1] else row[1]
             tags = [
                 r[0]
                 for r in self.con.execute(

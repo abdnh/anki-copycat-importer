@@ -6,7 +6,7 @@ zip: AnkiAppImporter.ankiaddon
 AnkiAppImporter.ankiaddon: src/*
 	rm -f $@
 	rm -rf src/__pycache__
-	( cd src/; zip -r ../$@ * )
+	( cd src/; zip -r ../$@ * -x meta.json )
 
 check: check_format mypy pylint
 

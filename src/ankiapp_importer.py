@@ -300,7 +300,8 @@ class AnkiAppImporter:
             ):
                 field_name = notetype.fields.normalize(row[0])
                 # Avoid overriding previously processed non-empty fields differing only in case
-                if not fields.get(field_name, "").strip():
+                # FIXME: we should instead add new fields with unique names to avoid data loss
+                if not fields.get(field_name, "").strip().replace("&nbsp", ""):
                     # NOTE: Filling empty fields with a non-breaking space for now to avoid errors on importing empty notes
                     # because I've not figured out yet a way to find the order of notetype fields
                     # (If any is kept by AnkiApp)

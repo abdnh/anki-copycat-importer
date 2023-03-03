@@ -284,14 +284,14 @@ class AnkiAppImporter:
     def _extract_cards(self) -> None:
         self.cards: Dict[bytes, Card] = {}
         self._update_progress("Extracting cards...")
-        for row in self.con.execute("SELECT * FROM cards"):
+        for row in self.con.execute(
+            "select c.id, c.knol_id, c.layout_id, d.deck_id from cards c, cards_decks d where c.id = d.card_id"
+        ):
             ID = row[0]
             knol_id = row[1]
             layout_id = row[2]
             notetype = self.notetypes[layout_id]
-            deck_id = self.con.execute(
-                "SELECT deck_id FROM cards_decks WHERE card_id = ?", (ID,)
-            ).fetchone()[0]
+            deck_id = row[3]
             deck = self.decks[deck_id]
             fields = {}
             for row in self.con.execute(

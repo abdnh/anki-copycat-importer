@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2023-03-03
+
+### Fixed
+
+-   Fixed an issue where the add-on fails to import some fields if the notetype happens to have field names differing only in case.
+-   Greatly optimize the cards extraction step for large collection.
+
 ## [1.5.3] - 2023-02-22
 
 ### Fixed
@@ -87,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
+[1.5.4]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.3...1.5.4
 [1.5.3]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.2...1.5.3
 [1.5.2]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.1...1.5.2
 [1.5.1]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.0...1.5.1

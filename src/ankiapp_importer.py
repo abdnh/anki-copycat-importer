@@ -190,7 +190,7 @@ class Media:
                 ext = self.extensions_for_mimes[mime]
             except KeyError as exc:
                 raise Exception(f"unrecognized mime type: {mime}") from exc
-        self.ext = cast(str, ext)
+        self.ext = ext
         self.data = data
         self.filename: Optional[str] = None  # Filename in Anki
 

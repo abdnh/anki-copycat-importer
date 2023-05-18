@@ -1,30 +1,22 @@
-.PHONY: all zip clean check pylint check check_format fix mypy pylint
-all: zip
+.PHONY: all zip ankiweb fix mypy pylint clean
 
-zip: AnkiAppImporter.ankiaddon
+all: zip ankiweb
 
-AnkiAppImporter.ankiaddon: src/*
-	rm -f $@
-	rm -rf src/__pycache__
-	( cd src/; zip -r ../$@ * -x meta.json )
+zip:
+	python -m ankiscripts.build --type package --qt all --exclude user_files/**/
 
-check: check_format mypy pylint
-
-check_format:
-	python -m black --exclude=forms --check --diff --color src
-	python -m isort --check --diff --color src
+ankiweb:
+	python -m ankiscripts.build --type ankiweb --qt all --exclude user_files/**/
 
 fix:
-	python -m black --exclude=forms src
-	python -m isort src
+	python -m black src tests --exclude="forms|vendor"
+	python -m isort src tests
 
 mypy:
-	python -m mypy src
+	python -m mypy src tests
 
 pylint:
-	python -m pylint src
+	python -m pylint src tests
 
 clean:
-	rm -f src/*.pyc
-	rm -f src/__pycache__
-	rm -f AnkiAppImporter.ankiaddon
+	rm -rf build/

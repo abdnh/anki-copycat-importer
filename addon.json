@@ -1,6 +1,7 @@
 {
     "name": "AnkiApp Importer",
     "package": "AnkiAppImporter",
-    "homepage": "https://github.com/abdnh/AnkiApp-importer/",
+    "homepage": "https://github.com/abdnh/AnkiApp-importer",
+    "ankiweb_id": "2072125761",
     "min_point_version": 45
 }

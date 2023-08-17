@@ -24,9 +24,7 @@ def import_from_ankiapp(filename: str) -> None:
         mw.progress.finish()
         try:
             count, warnings = fut.result()
-            if count:
-                tooltip(f"Successfully imported {count} card(s).")
-            else:
+            if not count:
                 showWarning(
                     """\
     No cards were found in your AnkiApp database. \
@@ -36,6 +34,10 @@ def import_from_ankiapp(filename: str) -> None:
                     parent=mw,
                     title="AnkiApp Importer",
                 )
+            if count == 1:
+                tooltip(f"Imported {count} card.")
+            else:
+                tooltip(f"Imported {count} cards.")
             if warnings:
                 showText(
                     "The following issues were found:\n" + "\n".join(warnings),

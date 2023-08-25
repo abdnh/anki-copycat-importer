@@ -176,6 +176,7 @@ class Media:
         # (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
         "image/webp": ".webp",
         "image/jp2": ".jp2",
+        "audio/mp3": ".mp3",
     }
 
     # TODO: maybe explicitly close session after we finish

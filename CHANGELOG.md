@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-    - Improve the previous fix for field names differing only in case by also stripping non-breaking spaces.
+-   Improve the previous fix for field names differing only in case by also stripping non-breaking spaces.
 
 ## [1.5.4] - 2023-03-03
 

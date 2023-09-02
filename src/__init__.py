@@ -1,6 +1,6 @@
 from concurrent.futures import Future
 from textwrap import dedent
-from typing import Optional, Set, Tuple
+from typing import Optional
 
 from aqt import mw
 from aqt.gui_hooks import main_window_did_init

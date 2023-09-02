@@ -1,0 +1,8 @@
+{
+    "properties": {
+        "remote_media": {
+            "type": "boolean"
+        }
+    },
+    "type": "object"
+}

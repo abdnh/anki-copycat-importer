@@ -1,4 +1,5 @@
 from concurrent.futures import Future
+from textwrap import dedent
 from typing import Optional, Set, Tuple
 
 from aqt import mw
@@ -26,13 +27,16 @@ def import_from_ankiapp(filename: str) -> None:
             count, warnings = fut.result()
             if not count:
                 showWarning(
-                    """\
-    No cards were found in your AnkiApp database. \
-    Before using this add-on, please make sure you've downloaded the decks on your AnkiApp account by clicking \
-    on the Download button shown when you select a deck in AnkiApp.
-                """,
+                    dedent(
+                        """\
+                    No cards were found in your AnkiApp database.
+                    Before using this add-on, please make sure you've downloaded the decks on your AnkiApp account by clicking
+                    on the Download button shown when you select a deck in AnkiApp.
+                    """
+                    ),
                     parent=mw,
                     title="AnkiApp Importer",
+                    textFormat="rich",
                 )
             if count == 1:
                 tooltip(f"Imported {count} card.")

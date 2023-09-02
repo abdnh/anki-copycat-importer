@@ -38,6 +38,7 @@ def import_from_ankiapp(filename: str) -> None:
                     title="AnkiApp Importer",
                     textFormat="rich",
                 )
+                return
             if count == 1:
                 tooltip(f"Imported {count} card.")
             else:

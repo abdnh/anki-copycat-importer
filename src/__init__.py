@@ -16,7 +16,7 @@ def import_from_ankiapp(filename: str) -> None:
     )
     mw.progress.set_title("AnkiApp Importer")
 
-    def start_importing() -> Optional[Tuple[int, Set[str]]]:
+    def start_importing() -> Optional[tuple[int, set[str]]]:
         importer = AnkiAppImporter(mw, filename)
         return importer.import_to_anki(), importer.warnings
 

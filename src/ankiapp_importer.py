@@ -1,13 +1,16 @@
 import base64
+import dataclasses
 import html
 import json
 import re
 import sqlite3
 import time
 import urllib
-from collections.abc import MutableSet
+from collections.abc import Iterable, Iterator, MutableSet
 from mimetypes import guess_extension
-from typing import Any, Dict, Iterable, Iterator, List, Match, Optional, Set, cast
+from re import Match
+from textwrap import dedent
+from typing import Any, Dict, List, Optional, cast
 
 import aqt.editor
 import requests
@@ -16,6 +19,7 @@ from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
 
 INVALID_FIELD_CHARS_RE = re.compile('[:"{}]')
+
 
 # Must match fix_name in fields.rs: https://github.com/ankitects/anki/blob/404a6c5d4a5fd908a20d8cbdb003c1204e10c0ce/rslib/src/notetype/fields.rs#L55
 def fix_field_name(text: str) -> str:
@@ -31,7 +35,7 @@ class FieldSet(MutableSet):
     """
 
     def __init__(self, iterable: Optional[Iterable] = None) -> None:
-        self.elements: Set[str] = set()
+        self.elements: set[str] = set()
         super().__init__()
         if iterable:
             for el in iterable:
@@ -68,12 +72,20 @@ class FieldSet(MutableSet):
 
 
 class NoteType:
-    def __init__(self, name: str, templates: str, style: str, fields: FieldSet):
+    def __init__(
+        self,
+        name: str,
+        fields: FieldSet,
+        style: str,
+        templates: Optional[str] = None,
+    ):
         self.mid: Optional[NotetypeId] = None  # Anki's notetype ID
         self.name = name
-        self._raw_templates = json.loads(templates)
-        self.style = style
         self.fields = fields
+        self.style = style
+        self._raw_templates: List[str] = ["", ""]
+        if templates:
+            self._raw_templates = json.loads(templates)
 
     def _process_template(self, template: str) -> str:
         # Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`
@@ -107,8 +119,21 @@ class NoteType:
 
 class FallbackNotetype(NoteType):
     def __init__(self, extra_fields: FieldSet) -> None:
-        self.mid: Optional[NotetypeId] = None
-        self.name = "AnkiApp Fallback Notetype"
+        super().__init__(
+            "AnkiApp Fallback Notetype",
+            FieldSet(["Front", "Back"]),
+            dedent(
+                """\
+                .card {
+                    font-family: arial;
+                    font-size: 20px;
+                    text-align: center;
+                    color: black;
+                    background-color: white;
+                }"""
+            ),
+            None,
+        )
         self._front = """{{Front}}"""
         self._back = """\
 {{FrontSide}}
@@ -116,16 +141,6 @@ class FallbackNotetype(NoteType):
 <hr id=answer>
 
 {{Back}}"""
-        self.style = """\
-.card {
-    font-family: arial;
-    font-size: 20px;
-    text-align: center;
-    color: black;
-    background-color: white;
-}
-"""
-        self.fields = FieldSet(["Front", "Back"])
         self.fields |= extra_fields
 
     @property
@@ -137,24 +152,19 @@ class FallbackNotetype(NoteType):
         return self._back
 
 
+@dataclasses.dataclass
 class Deck:
-    def __init__(self, name: str, description: str):
-        self.did: Optional[DeckId] = None  # Anki's deck ID
-        self.name = name
-        self.description = description
-
-    def __repr__(self) -> str:
-        return f"Deck({self.name})"
+    did: Optional[DeckId] = dataclasses.field(default=None, init=False)
+    name: str
+    description: str
 
 
+@dataclasses.dataclass
 class Card:
-    def __init__(
-        self, layout_id: bytes, deck: Deck, fields: Dict[str, str], tags: List[str]
-    ):
-        self.layout_id = layout_id
-        self.deck = deck
-        self.fields = fields
-        self.tags = tags
+    layout_id: bytes
+    deck: Deck
+    fields: Dict[str, str]
+    tags: List[str]
 
 
 # https://github.com/ankitects/anki/blob/main/qt/aqt/editor.py
@@ -168,8 +178,8 @@ def fname_to_link(fname: str) -> str:
     return f"[sound:{html.escape(fname, quote=False)}]"
 
 
+# pylint: disable=too-few-public-methods
 class Media:
-
     # Work around guess_extension() not recognizing some file types
     extensions_for_mimes = {
         # .webp is not recognized on Windows without additional software
@@ -190,7 +200,9 @@ class Media:
             try:
                 ext = self.extensions_for_mimes[mime]
             except KeyError as exc:
-                raise Exception(f"unrecognized mime type: {mime}") from exc
+                raise AnkiAppImporterException(
+                    f"unrecognized mime type: {mime}"
+                ) from exc
         self.ext = ext
         self.data = data
         self.filename: Optional[str] = None  # Filename in Anki
@@ -222,6 +234,7 @@ class AnkiAppImporterCanceledException(AnkiAppImporterException):
     pass
 
 
+# pylint: disable=too-few-public-methods,too-many-instance-attributes
 class AnkiAppImporter:
     def __init__(self, mw: AnkiQt, filename: str):
         self.mw = mw
@@ -231,7 +244,7 @@ class AnkiAppImporter:
         self._extract_decks()
         self._extract_media()
         self._extract_cards()
-        self.warnings: Set[str] = set()
+        self.warnings: set[str] = set()
 
     def _cancel_if_needed(self) -> None:
         if self.mw.progress.want_cancel():
@@ -256,7 +269,7 @@ class AnkiAppImporter:
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (ID,)
             ):
                 fields.add(row[0])
-            notetype = NoteType(name, templates, style, fields)
+            notetype = NoteType(name, fields, style, templates)
             if notetype.is_invalid():
                 notetype = FallbackNotetype(fields)
             self.notetypes[ID] = notetype
@@ -344,6 +357,7 @@ class AnkiAppImporter:
         # dummy image ref
         return f'<img src="{blob_id}.jpg"></img>'
 
+    # pylint: disable=too-many-locals
     def import_to_anki(self) -> int:
         self._update_progress("Importing decks...")
         for deck in self.decks.values():

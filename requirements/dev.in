@@ -13,3 +13,4 @@ pytest
 pytest-cov
 pre-commit
 ankiscripts[forms] @ https://github.com/abdnh/ankiscripts/archive/ec166df11d726172e6e633a6bd0ddeb4f624e63d.zip
+types-requests

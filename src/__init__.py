@@ -7,7 +7,11 @@ from aqt.gui_hooks import main_window_did_init
 from aqt.qt import QAction, qconnect
 from aqt.utils import getFile, showText, showWarning, tooltip
 
-from .ankiapp_importer import AnkiAppImporter, AnkiAppImporterCanceledException
+from .ankiapp_importer import (
+    AnkiAppImporter,
+    AnkiAppImporterCanceledException,
+    AnkiAppImporterException,
+)
 
 
 def import_from_ankiapp(filename: str) -> None:
@@ -51,6 +55,8 @@ def import_from_ankiapp(filename: str) -> None:
             mw.reset()
         except AnkiAppImporterCanceledException:
             tooltip("Canceled")
+        except AnkiAppImporterException as exc:
+            showWarning(str(exc), parent=mw, title="AnkiApp Importer")
 
     mw.taskman.run_in_background(start_importing, on_done)
 

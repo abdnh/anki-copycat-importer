@@ -201,7 +201,7 @@ class Media:
                 ext = self.extensions_for_mimes[mime]
             except KeyError as exc:
                 raise AnkiAppImporterException(
-                    f"unrecognized mime type: {mime}"
+                    f"unrecognized media type: {mime}"
                 ) from exc
         self.ext = ext
         self.data = data

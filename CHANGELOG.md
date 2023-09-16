@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.7] - 2023-09-15
+
+### Fixed
+
+-   Fixed audio references in the form `<audio id="{blob_id}"/>` not being imported.
+
 ## [1.5.6] - 2023-08-25
 
 ### Fixed
@@ -106,6 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
+[1.5.7]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.6...1.5.7
 [1.5.6]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.5...1.5.6
 [1.5.5]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.4...1.5.5
 [1.5.4]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.3...1.5.4

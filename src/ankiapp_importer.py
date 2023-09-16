@@ -238,6 +238,21 @@ class AnkiAppImporterCanceledException(AnkiAppImporterException):
 class AnkiAppImporter:
     def __init__(self, mw: AnkiQt, filename: str):
         self.mw = mw
+        self.BLOB_REF_PATTERNS = (
+            re.compile(r"{{blob (?P<fname>.*?)}}"),
+            # AnkiApp uses a form like `<audio id="{blob_id}" type="{mime_type}" />` too
+            # TODO: extract the type attribute
+            # quoted case
+            re.compile(
+                r"(?i)(<(?:img|audio)\b[^>]* id=(?P<str>[\"'])(?P<fname>[^>]+?)(?P=str)[^>]*>)"
+            ),
+            # unquoted case
+            re.compile(
+                r"(?i)(<(?:img|audio)\b[^>]* id=(?!['\"])(?P<fname>[^ >]+)[^>]*?>)"
+            ),
+            # Use Anki's HTML media patterns too for completeness
+            *(re.compile(p) for p in mw.col.media.html_media_regexps),
+        )
         self.config = mw.addonManager.getConfig(__name__)
         self.con = sqlite3.connect(filename)
         self._extract_notetypes()
@@ -336,10 +351,8 @@ class AnkiAppImporter:
             self.cards[ID] = Card(layout_id, deck, fields, tags)
             self._cancel_if_needed()
 
-    BLOB_REF_RE = re.compile(r"{{blob (.*?)}}")
-
     def _repl_blob_ref(self, match: Match[str]) -> str:
-        blob_id = match.group(1)
+        blob_id = match.group("fname")
         media_obj = None
         if blob_id in self.media:
             media_obj = self.media[blob_id]
@@ -393,9 +406,10 @@ class AnkiAppImporter:
 
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
-                card.fields[field_name] = self.BLOB_REF_RE.sub(
-                    self._repl_blob_ref, contents
-                )
+                for ref_re in self.BLOB_REF_PATTERNS:
+                    card.fields[field_name] = ref_re.sub(
+                        self._repl_blob_ref, card.fields[field_name]
+                    )
 
             notetype = self.notetypes[card.layout_id]
             assert notetype.mid is not None

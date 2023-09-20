@@ -239,6 +239,8 @@ class AnkiAppImporter:
     def __init__(self, mw: AnkiQt, filename: str):
         self.mw = mw
         self.BLOB_REF_PATTERNS = (
+            # Use Anki's HTML media patterns too for completeness
+            *(re.compile(p) for p in mw.col.media.html_media_regexps),
             re.compile(r"{{blob (?P<fname>.*?)}}"),
             # AnkiApp uses a form like `<audio id="{blob_id}" type="{mime_type}" />` too
             # TODO: extract the type attribute
@@ -250,8 +252,6 @@ class AnkiAppImporter:
             re.compile(
                 r"(?i)(<(?:img|audio)\b[^>]* id=(?!['\"])(?P<fname>[^ >]+)[^>]*?>)"
             ),
-            # Use Anki's HTML media patterns too for completeness
-            *(re.compile(p) for p in mw.col.media.html_media_regexps),
         )
         self.config = mw.addonManager.getConfig(__name__)
         self.con = sqlite3.connect(filename)

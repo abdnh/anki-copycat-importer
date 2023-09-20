@@ -117,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2022-01-17
 
 Initial release
+
 [1.5.8]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.7...1.5.8
 [1.5.7]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.6...1.5.7
 [1.5.6]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.5...1.5.6

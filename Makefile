@@ -1,4 +1,4 @@
-.PHONY: all zip ankiweb vendor fix mypy pylint test clean
+.PHONY: all zip ankiweb vendor fix mypy pylint test sourcedist clean
 
 all: zip ankiweb
 
@@ -23,6 +23,9 @@ pylint:
 
 test:
 	python -m  pytest --cov=src --cov-config=.coveragerc
+
+sourcedist:
+	python -m ankiscripts.sourcedist
 
 clean:
 	rm -rf build/

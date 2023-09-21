@@ -9,9 +9,6 @@ repos:
           - id: end-of-file-fixer
           - id: check-json
             exclude: ".vscode(.dist)?/.*"
-          - id: pretty-format-json
-            args: ["--autofix", "--indent", "4", "--no-ensure-ascii"]
-            exclude: ".vscode.dist/launch.json"
           - id: check-yaml
           - id: check-builtin-literals
           - id: check-case-conflict

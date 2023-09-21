@@ -1,3 +1,5 @@
+import os
+import sys
 from concurrent.futures import Future
 from textwrap import dedent
 from typing import Optional
@@ -7,11 +9,14 @@ from aqt.gui_hooks import main_window_did_init
 from aqt.qt import QAction, qconnect
 from aqt.utils import getFile, showText, showWarning, tooltip
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
+
 from .ankiapp_importer import (
     AnkiAppImporter,
     AnkiAppImporterCanceledException,
     AnkiAppImporterException,
 )
+from .consts import consts
 
 
 def import_from_ankiapp(filename: str) -> None:
@@ -19,7 +24,7 @@ def import_from_ankiapp(filename: str) -> None:
         label="Extracting collection from AnkiApp database...",
         immediate=True,
     )
-    mw.progress.set_title("AnkiApp Importer")
+    mw.progress.set_title(consts.name)
 
     def start_importing() -> Optional[tuple[int, set[str]]]:
         importer = AnkiAppImporter(mw, filename)
@@ -39,7 +44,7 @@ def import_from_ankiapp(filename: str) -> None:
                     """
                     ),
                     parent=mw,
-                    title="AnkiApp Importer",
+                    title=consts.name,
                     textFormat="rich",
                 )
                 return
@@ -50,13 +55,13 @@ def import_from_ankiapp(filename: str) -> None:
             if warnings:
                 showText(
                     "The following issues were found:\n" + "\n".join(warnings),
-                    title="AnkiApp Importer",
+                    title=consts.name,
                 )
             mw.reset()
         except AnkiAppImporterCanceledException:
             tooltip("Canceled")
         except AnkiAppImporterException as exc:
-            showWarning(str(exc), parent=mw, title="AnkiApp Importer")
+            showWarning(str(exc), parent=mw, title=consts.name)
 
     mw.taskman.run_in_background(start_importing, on_done)
 

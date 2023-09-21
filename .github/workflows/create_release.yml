@@ -27,7 +27,7 @@ jobs:
               run: .github/workflows/install_deps.sh
 
             - name: Create packages
-              run: make
+              run: make vendor && make
 
             - name: Extract changes
               shell: bash

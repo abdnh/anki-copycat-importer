@@ -1,13 +1,13 @@
 import os
 import sys
 from concurrent.futures import Future
+from pathlib import Path
 from textwrap import dedent
 from typing import Optional
 
 from aqt import mw
-from aqt.gui_hooks import main_window_did_init
 from aqt.qt import QAction, qconnect
-from aqt.utils import getFile, showText, showWarning, tooltip
+from aqt.utils import showText, showWarning, tooltip
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
 
@@ -17,9 +17,10 @@ from .ankiapp_importer import (
     AnkiAppImporterException,
 )
 from .consts import consts
+from .gui.dialog import Dialog
 
 
-def import_from_ankiapp(filename: str) -> None:
+def import_from_ankiapp(db_path: Path) -> None:
     mw.progress.start(
         label="Extracting collection from AnkiApp database...",
         immediate=True,
@@ -27,7 +28,7 @@ def import_from_ankiapp(filename: str) -> None:
     mw.progress.set_title(consts.name)
 
     def start_importing() -> Optional[tuple[int, set[str]]]:
-        importer = AnkiAppImporter(mw, filename)
+        importer = AnkiAppImporter(mw, db_path)
         return importer.import_to_anki(), importer.warnings
 
     def on_done(fut: Future) -> None:
@@ -66,28 +67,17 @@ def import_from_ankiapp(filename: str) -> None:
     mw.taskman.run_in_background(start_importing, on_done)
 
 
-def on_mw_init() -> None:
-    action = QAction(mw)
-    action.setText("Import From AnkiApp")
-    mw.form.menuTools.addAction(action)
-
-    def on_triggered() -> None:
-        file = getFile(
-            mw,
-            "AnkiApp database file to import",
-            key="AnkiAppImporter",
-            cb=None,
-            filter="*",
-        )
-        if not file:
-            return
-        assert isinstance(file, str)
-        import_from_ankiapp(file)
-
-    qconnect(
-        action.triggered,
-        on_triggered,
-    )
+action = QAction(mw)
+action.setText("Import From AnkiApp")
+mw.form.menuTools.addAction(action)
 
 
-main_window_did_init.append(on_mw_init)
+def on_action() -> None:
+    dialog = Dialog(mw, on_done=import_from_ankiapp)
+    dialog.open()
+
+
+qconnect(
+    action.triggered,
+    on_action,
+)

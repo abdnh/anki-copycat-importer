@@ -8,12 +8,13 @@ So you can no longer export a zip of your cards [without paying](https://www.ank
 This add-on salvages the cards from the SQLite database and was inspired by the Reddit post linked above.
 It can import cards, decks, note types, and media files.
 
+![The add-on's dialog](images/dialog.png)
+
 ## How to Use
 
 -   Download the add-on from https://ankiweb.net/shared/info/2072125761
 -   Make sure all your AnkiApp decks are downloaded before using the add-on. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.
--   Run Anki and go to **Tools > Import From AnkiApp** and choose AnkiApp's database file (`C:\Users\%USERNAME%\AppData\Roaming\AnkiApp\databases\file__0` on Windows; `~/Library/Application Support/AnkiApp/databases/file__0/1` or under `~/Library/Containers/com.ankiapp.client/Data/Documents/ankiapp` on macOS).
--   Grab a cup of coffee while waiting for importing to finish.
+-   Run Anki and go to **Tools > Import From AnkiApp**. The add-on tries to detect AnkiApp's data folder on your system automatically. If you see the "Data folder" field already populated, you can go ahead and click Import.
 
 ## Notes & Known Issues
 

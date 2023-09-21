@@ -8,6 +8,7 @@ import time
 import urllib
 from collections.abc import Iterable, Iterator, MutableSet
 from mimetypes import guess_extension
+from pathlib import Path
 from re import Match
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, cast
@@ -236,7 +237,7 @@ class AnkiAppImporterCanceledException(AnkiAppImporterException):
 
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
 class AnkiAppImporter:
-    def __init__(self, mw: AnkiQt, filename: str):
+    def __init__(self, mw: AnkiQt, db_path: Path):
         self.mw = mw
         self.BLOB_REF_PATTERNS = (
             # Use Anki's HTML media patterns too for completeness
@@ -254,7 +255,7 @@ class AnkiAppImporter:
             ),
         )
         self.config = mw.addonManager.getConfig(__name__)
-        self.con = sqlite3.connect(filename)
+        self.con = sqlite3.connect(db_path)
         self._extract_notetypes()
         self._extract_decks()
         self._extract_media()

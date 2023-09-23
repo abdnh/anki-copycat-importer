@@ -255,14 +255,19 @@ class IndexedDBReader:
         self.decks: Dict[str, Dict] = {}
 
     def _read(self, leveldb_path: Path, blob_path: Path) -> None:
-        db = ccl_chromium_indexeddb.WrappedIndexDB(leveldb_path, blob_path)
-        if "DecksDatabase" in db:
-            for record in (
-                db["DecksDatabase"].get_object_store_by_name("decks").iterate_records()
-            ):
-                if record.value and "deckID" in record.value:
-                    self.decks[record.value["deckID"]] = record.value
-        logger.debug("Decks extracted from IndexedDB: %s", self.decks)
+        try:
+            db = ccl_chromium_indexeddb.WrappedIndexDB(leveldb_path, blob_path)
+            if "DecksDatabase" in db:
+                for record in (
+                    db["DecksDatabase"]
+                    .get_object_store_by_name("decks")
+                    .iterate_records()
+                ):
+                    if record.value and "deckID" in record.value:
+                        self.decks[record.value["deckID"]] = record.value
+            logger.debug("Decks extracted from IndexedDB: %s", self.decks)
+        except Exception:
+            logger.error("ccl_chromium_indexeddb failed", exc_info=True)
 
     def notetype_for_deck(self, deck_id: str, deck_name: str) -> Optional[NoteType]:
         if deck_id not in self.decks:

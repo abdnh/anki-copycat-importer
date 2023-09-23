@@ -90,13 +90,15 @@ class NoteType:
         style: str,
         front: str,
         back: str,
+        from_db: bool = False,
     ):
         self.mid: Optional[NotetypeId] = None  # Anki's notetype ID
         self.name = name
         self.fields = fields
         self.style = style
-        self.front = front
-        self.back = back
+        self._front = front
+        self._back = back
+        self._from_db = from_db
 
     @staticmethod
     def from_db(
@@ -107,10 +109,10 @@ class NoteType:
         templates = json.loads(templates_str)
         if not isinstance(templates, list) or len(templates) < 2:
             return None
-        return NoteType(name, fields, style, templates[0], templates[1])
+        return NoteType(name, fields, style, templates[0], templates[1], from_db=True)
 
-    def _process_template(self, template: str) -> str:
-        # Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`
+    def _transform_raw_template(self, template: str) -> str:
+        """Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`"""
         # TODO: use a regex instead?
         template = template.replace("{{[", "{{").replace("]}}", "}}")
         # Unlike Anki, AnkiApp uses case-insensitive references, so we need to fix them
@@ -123,8 +125,20 @@ class NoteType:
             )
         return template
 
+    def front(self) -> str:
+        if self._from_db:
+            return self._transform_raw_template(self._front)
+        return self._front
+
+    def back(self) -> str:
+        if self._from_db:
+            return self._transform_raw_template(self._back)
+        return self._back
+
     def __repr__(self) -> str:
-        return f"NoteType({self.name=}, {self.fields=}, {self.front=}, {self.back=})"
+        return (
+            f"NoteType({self.name=}, {self.fields=}, {self.front()=}, {self.back()=})"
+        )
 
 
 # pylint: disable=too-few-public-methods
@@ -505,11 +519,15 @@ class AnkiAppImporter:
                 field_dict = self.mw.col.models.new_field(field_name)
                 self.mw.col.models.add_field(model, field_dict)
             template_dict = self.mw.col.models.new_template("Card 1")
-            template_dict["qfmt"] = notetype.front
-            template_dict["afmt"] = notetype.back
+            template_dict["qfmt"] = notetype.front()
+            template_dict["afmt"] = notetype.back()
             self.mw.col.models.add_template(model, template_dict)
             model["css"] = notetype.style
-            self.mw.col.models.add(model)
+            try:
+                self.mw.col.models.add(model)
+            except Exception:
+                logger.error("Failed to add notetype: %s", notetype, exc_info=True)
+                raise
             notetype.mid = model["id"]
 
         self._update_progress("Importing media...")

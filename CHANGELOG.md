@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2023-09-23
+
+### Added
+
+-   Added a graphical interface to make it easier to locate AnkiApp's data folder or database.
+-   The add-on now tries to detect AnkiApp's data folder on your system for you.
+-   The add-on now keeps some logs under th user_files/logs subfolder.
+-   Add the ability to extract misssing AnkiApp layouts from IndexedDB databases in the data folder. This is experimental and doesn't work currently on the latest Anki version (2.1.66) due to [an issue](https://github.com/abdnh/AnkiApp-importer/issues/5).
+
 ## [1.5.8] - 2023-09-20
 
 ### Fixed
@@ -118,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
+[1.6.0]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.8...1.6.0
 [1.5.8]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.7...1.5.8
 [1.5.7]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.6...1.5.7
 [1.5.6]: https://github.com/abdnh/AnkiApp-importer/compare/1.5.5...1.5.6

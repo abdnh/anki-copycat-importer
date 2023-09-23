@@ -2,7 +2,7 @@ import functools
 import os
 import sqlite3
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 try:
     from anki.utils import is_mac, is_win
@@ -51,7 +51,20 @@ class AnkiAppData:
                     db_paths.append(db_path)
             return db_paths
 
+    @functools.cached_property
+    def indexeddb_dbs(self) -> List[Tuple[Path, Path]]:
+        paths: List[Tuple[Path, Path]] = []
+        databases_path = self.path / "IndexedDB"
+        for leveldb_path in databases_path.glob("*.leveldb"):
+            if leveldb_path.is_dir():
+                blob_path = leveldb_path.with_suffix(".blob")
+                if blob_path.is_dir():
+                    paths.append((leveldb_path, blob_path))
+
+        return paths
+
 
 if __name__ == "__main__":
     appdata = AnkiAppData(get_ankiapp_data_folder())
     print(appdata.sqlite_dbs)
+    print(appdata.indexeddb_dbs)

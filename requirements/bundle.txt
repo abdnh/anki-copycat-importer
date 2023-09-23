@@ -1,2 +1,4 @@
-ankiutils @ git+https://github.com/abdnh/ankiutils@a287daa1d0f84b08c623165d4ccdd4637e2d714c
+ankiutils @ git+https://github.com/abdnh/ankiutils@079aae5786038304fbce91ae5fe21025fac76d02
+    # via -r requirements/bundle.in
+ccl-chrome-indexeddb @ git+https://github.com/abdnh/ccl_chrome_indexeddb@anki
     # via -r requirements/bundle.in

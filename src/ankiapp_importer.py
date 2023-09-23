@@ -7,6 +7,7 @@ import sqlite3
 import time
 import urllib
 from collections.abc import Iterable, Iterator, MutableSet
+from enum import Enum
 from mimetypes import guess_extension
 from pathlib import Path
 from re import Match
@@ -14,10 +15,15 @@ from textwrap import dedent
 from typing import Any, Dict, List, Optional, cast
 
 import aqt.editor
+import ccl_chromium_indexeddb
 import requests
 from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
+
+from .appdata import AnkiAppData
+from .config import config
+from .log import logger
 
 INVALID_FIELD_CHARS_RE = re.compile('[:"{}]')
 
@@ -71,26 +77,41 @@ class FieldSet(MutableSet):
                 return item
         return value
 
+    def __repr__(self) -> str:
+        return repr(self.elements)
 
+
+# pylint: disable=too-many-arguments
 class NoteType:
     def __init__(
         self,
         name: str,
         fields: FieldSet,
         style: str,
-        templates: Optional[str] = None,
+        front: str,
+        back: str,
     ):
         self.mid: Optional[NotetypeId] = None  # Anki's notetype ID
         self.name = name
         self.fields = fields
         self.style = style
-        self._raw_templates: List[str] = ["", ""]
-        if templates:
-            self._raw_templates = json.loads(templates)
+        self.front = front
+        self.back = back
+
+    @staticmethod
+    def from_db(
+        name: str, fields: FieldSet, style: str, templates_str: Optional[str] = None
+    ) -> Optional["NoteType"]:
+        if not templates_str:
+            templates_str = ""
+        templates = json.loads(templates_str)
+        if not isinstance(templates, list) or len(templates) < 2:
+            return None
+        return NoteType(name, fields, style, templates[0], templates[1])
 
     def _process_template(self, template: str) -> str:
         # Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`
-        # FIXME: use a regex instead?
+        # TODO: use a regex instead?
         template = template.replace("{{[", "{{").replace("]}}", "}}")
         # Unlike Anki, AnkiApp uses case-insensitive references, so we need to fix them
         for field in self.fields:
@@ -102,67 +123,55 @@ class NoteType:
             )
         return template
 
-    @property
-    def front(self) -> str:
-        return self._process_template(self._raw_templates[0])
-
-    @property
-    def back(self) -> str:
-        return self._process_template(self._raw_templates[1])
-
-    def is_invalid(self) -> bool:
-        """Check whether the notetype is missing templates."""
-        return len(self._raw_templates) < 2
-
     def __repr__(self) -> str:
-        return f"NoteType({self.name})"
+        return f"NoteType({self.name=}, {self.fields=}, {self.front=}, {self.back=})"
 
 
+# pylint: disable=too-few-public-methods
 class FallbackNotetype(NoteType):
-    def __init__(self, extra_fields: FieldSet) -> None:
+    FRONT = "{{Front}}"
+    BACK = dedent(
+        """\
+        {{FrontSide}}
+
+        <hr id=answer>
+
+        {{Back}}"""
+    )
+
+    CSS = dedent(
+        """\
+        .card {
+            font-family: arial;
+            font-size: 20px;
+            text-align: center;
+            color: black;
+            background-color: white;
+        }"""
+    )
+
+    def __init__(self, extra_fields: FieldSet = FieldSet()) -> None:
         super().__init__(
             "AnkiApp Fallback Notetype",
             FieldSet(["Front", "Back"]),
-            dedent(
-                """\
-                .card {
-                    font-family: arial;
-                    font-size: 20px;
-                    text-align: center;
-                    color: black;
-                    background-color: white;
-                }"""
-            ),
-            None,
+            self.CSS,
+            self.FRONT,
+            self.BACK,
         )
-        self._front = """{{Front}}"""
-        self._back = """\
-{{FrontSide}}
-
-<hr id=answer>
-
-{{Back}}"""
         self.fields |= extra_fields
-
-    @property
-    def front(self) -> str:
-        return self._front
-
-    @property
-    def back(self) -> str:
-        return self._back
 
 
 @dataclasses.dataclass
 class Deck:
     did: Optional[DeckId] = dataclasses.field(default=None, init=False)
+    ID: str
     name: str
     description: str
 
 
 @dataclasses.dataclass
 class Card:
-    layout_id: bytes
+    layout_id: str
     deck: Deck
     fields: Dict[str, str]
     tags: List[str]
@@ -227,6 +236,45 @@ class Media:
             return None
 
 
+class IndexedDBReader:
+    def __init__(self) -> None:
+        self.decks: Dict[str, Dict] = {}
+
+    def _read(self, leveldb_path: Path, blob_path: Path) -> None:
+        db = ccl_chromium_indexeddb.WrappedIndexDB(leveldb_path, blob_path)
+        if "DecksDatabase" in db:
+            for record in (
+                db["DecksDatabase"].get_object_store_by_name("decks").iterate_records()
+            ):
+                if record.value and "deckID" in record.value:
+                    self.decks[record.value["deckID"]] = record.value
+        logger.debug("Decks extracted from IndexedDB: %s", self.decks)
+
+    def notetype_for_deck(self, deck_id: str, deck_name: str) -> Optional[NoteType]:
+        if deck_id not in self.decks:
+            return None
+        deck = self.decks[deck_id]
+        deck_config = deck.get("config", {})
+        notetype_name = deck_config.get(
+            "name", deck_config.get("base", f"{deck_name} Notetype")
+        )
+        fields = FieldSet()
+        front = ""
+        back = ""
+        for field in deck_config.get("fields"):
+            # TODO: Handle fields with different cases somehow
+            if field["name"] in fields:
+                continue
+            fields.add(field["name"])
+            field_ref = "<div>{{%s}}</div>" % field["name"]
+            if field["sides"][0]:
+                front += field_ref
+            if field["sides"][1]:
+                back += field_ref
+
+        return NoteType(notetype_name, fields, FallbackNotetype.CSS, front, back)
+
+
 class AnkiAppImporterException(Exception):
     pass
 
@@ -235,9 +283,14 @@ class AnkiAppImporterCanceledException(AnkiAppImporterException):
     pass
 
 
+class ImportedPathType(Enum):
+    DATA_DIR = 1
+    DB_PATH = 2
+
+
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
 class AnkiAppImporter:
-    def __init__(self, mw: AnkiQt, db_path: Path):
+    def __init__(self, mw: AnkiQt, path: Path, path_type: ImportedPathType):
         self.mw = mw
         self.BLOB_REF_PATTERNS = (
             # Use Anki's HTML media patterns too for completeness
@@ -254,7 +307,22 @@ class AnkiAppImporter:
                 r"(?i)(<(?:img|audio)\b[^>]* id=(?!['\"])(?P<fname>[^ >]+)[^>]*?>)"
             ),
         )
-        self.config = mw.addonManager.getConfig(__name__)
+        self.appdata: Optional[AnkiAppData] = None
+        self.indexeddb_reader = IndexedDBReader()
+        if path_type == ImportedPathType.DATA_DIR:
+            self.appdata = AnkiAppData(path)
+            if not self.appdata.sqlite_dbs:
+                raise AnkiAppImporterException(
+                    "Unable to locate database file in data folder."
+                )
+            # TODO: maybe import all databases or allow the user to choose
+            db_path = self.appdata.sqlite_dbs[0]
+            if self.appdata.indexeddb_dbs:
+                self.indexeddb_reader._read(
+                    self.appdata.indexeddb_dbs[0][0], self.appdata.indexeddb_dbs[0][1]
+                )
+        else:
+            db_path = path
         self.con = sqlite3.connect(db_path)
         self._extract_notetypes()
         self._extract_decks()
@@ -276,29 +344,31 @@ class AnkiAppImporter:
         self._cancel_if_needed()
 
     def _extract_notetypes(self) -> None:
-        self.notetypes: Dict[bytes, NoteType] = {}
+        self.notetypes: Dict[str, NoteType] = {}
         self._update_progress("Extracting notetypes...")
         for row in self.con.execute("SELECT * FROM layouts"):
             ID, name, templates, style = row[:4]
+            ID = str(ID)
             fields = FieldSet()
             for row in self.con.execute(
                 "SELECT knol_key_name FROM knol_keys_layouts WHERE layout_id = ?", (ID,)
             ):
                 fields.add(row[0])
-            notetype = NoteType(name, fields, style, templates)
-            if notetype.is_invalid():
+            notetype = NoteType.from_db(name, fields, style, templates)
+            if not notetype:
                 notetype = FallbackNotetype(fields)
-            self.notetypes[ID] = notetype
+            if notetype:
+                self.notetypes[ID] = notetype
             self._cancel_if_needed()
 
     def _extract_decks(self) -> None:
-        self.decks: Dict[bytes, Deck] = {}
+        self.decks: Dict[str, Deck] = {}
         self._update_progress("Extracting decks...")
         for row in self.con.execute("SELECT * FROM decks"):
             ID = row[0]
             name = row[2]
             description = row[3]
-            self.decks[ID] = Deck(name, description)
+            self.decks[ID] = Deck(ID, name, description)
             self._cancel_if_needed()
 
     def _extract_media(self) -> None:
@@ -312,17 +382,63 @@ class AnkiAppImporter:
             self._cancel_if_needed()
 
     def _extract_cards(self) -> None:
-        self.cards: Dict[bytes, Card] = {}
+        self.cards: Dict[str, Card] = {}
         self._update_progress("Extracting cards...")
         for row in self.con.execute(
             "select c.id, c.knol_id, c.layout_id, d.deck_id from cards c, cards_decks d where c.id = d.card_id"
         ):
             ID = row[0]
             knol_id = row[1]
-            layout_id = row[2]
-            notetype = self.notetypes[layout_id]
-            deck_id = row[3]
+            layout_id = str(row[2])
+            deck_id = str(row[3])
             deck = self.decks[deck_id]
+            notetype = None
+            if deck_id in self.notetypes:
+                # Fetched from IndexedDB below
+                notetype = self.notetypes[deck_id]
+                logger.debug(
+                    "Using notetype fetched from IndexedDB for card_id=%s: %s",
+                    ID,
+                    notetype,
+                )
+            elif layout_id not in self.notetypes:
+                notetype = self.indexeddb_reader.notetype_for_deck(deck_id, deck.name)
+                logger.debug(
+                    "Notetype fetched from IndexedDB for layout_id=%s, card_id=%s: %s",
+                    layout_id,
+                    ID,
+                    notetype,
+                )
+                if not notetype:
+                    notetype = FallbackNotetype()
+                    self.notetypes[layout_id] = notetype
+                self.notetypes[layout_id] = notetype
+            elif isinstance(self.notetypes[layout_id], FallbackNotetype):
+                logger.debug(
+                    "Fallback notetype for layout_id=%s, card_id=%s: %s",
+                    layout_id,
+                    ID,
+                    self.notetypes[layout_id],
+                )
+                notetype = self.indexeddb_reader.notetype_for_deck(deck_id, deck.name)
+                logger.debug(
+                    "Notetype fetched from IndexedDB for card_id=%s, deck_id=%s: %s",
+                    ID,
+                    deck_id,
+                    notetype,
+                )
+                if not notetype:
+                    notetype = self.notetypes[layout_id]
+                self.notetypes[deck_id] = notetype
+            else:
+                notetype = self.notetypes[layout_id]
+                logger.debug(
+                    "Using notetype fetched from SQLite for card_id=%s, deck_id=%s: %s",
+                    ID,
+                    deck_id,
+                    notetype,
+                )
+
             fields: Dict[str, str] = {}
             for row in self.con.execute(
                 "SELECT knol_key_name, value FROM knol_values WHERE knol_id = ?",
@@ -357,7 +473,7 @@ class AnkiAppImporter:
         media_obj = None
         if blob_id in self.media:
             media_obj = self.media[blob_id]
-        elif self.config["remote_media"]:
+        elif config["remote_media"]:
             media_obj = Media.from_server(blob_id)
             if media_obj:
                 filename = self.mw.col.media.write_data(
@@ -412,7 +528,7 @@ class AnkiAppImporter:
                         self._repl_blob_ref, card.fields[field_name]
                     )
 
-            notetype = self.notetypes[card.layout_id]
+            notetype = self.notetypes.get(card.deck.ID, self.notetypes[card.layout_id])
             assert notetype.mid is not None
             model = cast(NotetypeDict, self.mw.col.models.get(notetype.mid))
             assert model is not None

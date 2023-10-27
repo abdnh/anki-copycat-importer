@@ -1,88 +1,72 @@
-from pathlib import Path
-from typing import Optional
+from concurrent.futures import Future
+from typing import Optional, Type
 
 import ankiutils.gui.dialog
+from aqt.main import AnkiQt
 from aqt.qt import *
-from aqt.utils import getFile, showWarning
+from aqt.utils import showText, showWarning, tooltip
 
-from ..ankiapp_importer import ImportedPathType
-from ..appdata import get_ankiapp_data_folder
-from ..config import config
 from ..consts import consts
-from ..forms.dialog import Ui_Dialog
+from ..importers.errors import CopycatImporterCanceled, CopycatImporterError
+from ..importers.importer import CopycatImporter
+from .widgets import IMPORTER_WIDGETS
 
 
-class Dialog(ankiutils.gui.dialog.Dialog):
+class ImporterDialog(ankiutils.gui.dialog.Dialog):
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
-        on_done: Callable[[Path, ImportedPathType], None] = None,
+        mw: AnkiQt,
+        importer_class: Type[CopycatImporter],
     ) -> None:
-        super().__init__(__name__, parent)
-        self._on_done = on_done
+        self.mw = mw
+        self.importer_class = importer_class
+        super().__init__(__name__, mw)
 
     def setup_ui(self) -> None:
-        self.form = Ui_Dialog()
-        self.form.setupUi(self)
+        self.setWindowTitle(f"{consts.name} - {self.importer_class.name}")
+        import_button = QPushButton("Import", self)
+        qconnect(import_button.clicked, self.on_import)
+        layout = QFormLayout(self)
+        self.importer_widget = IMPORTER_WIDGETS[self.importer_class.name](self)
+        layout.addRow(self.importer_widget)
+        layout.addRow(import_button)
         super().setup_ui()
-        self.setWindowTitle(consts.name)
-
-        qconnect(self.form.data_folder_checkbox.toggled, self.on_data_folder_toggled)
-        qconnect(
-            self.form.database_file_checkbox.toggled, self.on_database_file_toggled
-        )
-        self.form.remote_media.setChecked(config["remote_media"])
-        qconnect(self.form.remote_media.toggled, self.on_remote_media_toggled)
-        ankiapp_data_folder = get_ankiapp_data_folder()
-        if ankiapp_data_folder:
-            self.form.data_folder.setText(ankiapp_data_folder)
-        qconnect(self.form.choose_data_folder.clicked, self.on_choose_data_folder)
-        qconnect(self.form.choose_database_file.clicked, self.on_choose_database_file)
-        qconnect(self.form.import_button.clicked, self.on_import)
-
-    def on_data_folder_toggled(self, checked: bool) -> None:
-        if checked:
-            self.form.data_folder.setEnabled(True)
-            self.form.choose_data_folder.setEnabled(True)
-            self.form.database_file.setEnabled(False)
-            self.form.choose_database_file.setEnabled(False)
-
-    def on_database_file_toggled(self, checked: bool) -> None:
-        if checked:
-            self.form.database_file.setEnabled(True)
-            self.form.choose_database_file.setEnabled(True)
-            self.form.data_folder.setEnabled(False)
-            self.form.choose_data_folder.setEnabled(False)
-
-    def on_remote_media_toggled(self, checked: bool) -> None:
-        config["remote_media"] = checked
-
-    def on_choose_data_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, "Choose AnkiApp data folder")
-        if folder:
-            self.form.data_folder.setText(folder)
-
-    def on_choose_database_file(self) -> None:
-        file = getFile(self, consts.name, cb=None, filter="*")
-        assert isinstance(file, str)
-        if file:
-            file = os.path.normpath(file)
-            self.form.database_file.setText(file)
 
     def on_import(self) -> None:
-        path: Optional[Path] = None
-        path_type: Optional[ImportedPathType] = None
-        if self.form.database_file_checkbox.isChecked():
-            path = Path(self.form.database_file.text())
-            path_type = ImportedPathType.DB_PATH
-        else:
-            path = Path(self.form.data_folder.text())
-            path_type = ImportedPathType.DATA_DIR
-        if not path or not path.exists():
-            showWarning(
-                "Path is empty or doesn't exist", parent=self, title=consts.name
-            )
+        options = self.importer_widget.on_import()
+        if options is None:
             return
-
         self.accept()
-        self._on_done(path, path_type)
+
+        self.mw.progress.start(
+            label="Importing...",
+            immediate=True,
+        )
+        self.mw.progress.set_title(consts.name)
+
+        def start_importing() -> Optional[tuple[int, set[str]]]:
+            importer = self.importer_class(**options)
+            return importer.do_import(), importer.warnings
+
+        def on_done(fut: Future) -> None:
+            self.mw.progress.finish()
+            try:
+                count, warnings = fut.result()
+                if self.importer_widget.on_done(count):
+                    if count == 1:
+                        tooltip(f"Imported {count} card.", parent=self.mw)
+                    else:
+                        tooltip(f"Imported {count} cards.", parent=self.mw)
+                    if warnings:
+                        showText(
+                            "The following issues were found:\n" + "\n".join(warnings),
+                            title=consts.name,
+                            parent=self.mw,
+                        )
+                    self.mw.reset()
+            except CopycatImporterCanceled:
+                tooltip("Canceled")
+            except CopycatImporterError as exc:
+                showWarning(str(exc), parent=self.mw, title=consts.name)
+
+        self.mw.taskman.run_in_background(start_importing, on_done)

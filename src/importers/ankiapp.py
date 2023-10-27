@@ -21,9 +21,11 @@ from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
 
-from .appdata import AnkiAppData
-from .config import config
-from .log import logger
+from ..appdata import AnkiAppData
+from ..config import config
+from ..log import logger
+from .errors import CopycatImporterCanceled, CopycatImporterError
+from .importer import CopycatImporter
 
 INVALID_FIELD_CHARS_RE = re.compile('[:"{}]')
 
@@ -224,9 +226,7 @@ class Media:
             try:
                 ext = self.extensions_for_mimes[mime]
             except KeyError as exc:
-                raise AnkiAppImporterException(
-                    f"unrecognized media type: {mime}"
-                ) from exc
+                raise CopycatImporterError(f"unrecognized media type: {mime}") from exc
         self.ext = ext
         self.data = data
         self.filename: Optional[str] = None  # Filename in Anki
@@ -294,22 +294,17 @@ class IndexedDBReader:
         return NoteType(notetype_name, fields, FallbackNotetype.CSS, front, back)
 
 
-class AnkiAppImporterException(Exception):
-    pass
-
-
-class AnkiAppImporterCanceledException(AnkiAppImporterException):
-    pass
-
-
 class ImportedPathType(Enum):
     DATA_DIR = 1
     DB_PATH = 2
 
 
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
-class AnkiAppImporter:
+class AnkiAppImporter(CopycatImporter):
+    name = "AnkiApp"
+
     def __init__(self, mw: AnkiQt, path: Path, path_type: ImportedPathType):
+        super().__init__()
         self.mw = mw
         self.BLOB_REF_PATTERNS = (
             # Use Anki's HTML media patterns too for completeness
@@ -331,7 +326,7 @@ class AnkiAppImporter:
         if path_type == ImportedPathType.DATA_DIR:
             self.appdata = AnkiAppData(path)
             if not self.appdata.sqlite_dbs:
-                raise AnkiAppImporterException(
+                raise CopycatImporterError(
                     "Unable to locate database file in data folder."
                 )
             # TODO: maybe import all databases or allow the user to choose
@@ -343,6 +338,9 @@ class AnkiAppImporter:
         else:
             db_path = path
         self.con = sqlite3.connect(db_path)
+        self.mw.progress.update(
+            label="Extracting collection from AnkiApp database...",
+        )
         self._extract_notetypes()
         self._extract_decks()
         self._extract_media()
@@ -351,7 +349,7 @@ class AnkiAppImporter:
 
     def _cancel_if_needed(self) -> None:
         if self.mw.progress.want_cancel():
-            raise AnkiAppImporterCanceledException
+            raise CopycatImporterCanceled
 
     def _update_progress(
         self, label: str, value: Optional[int] = None, max: Optional[int] = None
@@ -507,7 +505,7 @@ class AnkiAppImporter:
         return f'<img src="{blob_id}.jpg"></img>'
 
     # pylint: disable=too-many-locals
-    def import_to_anki(self) -> int:
+    def do_import(self) -> int:
         self._update_progress("Importing decks...")
         for deck in self.decks.values():
             did = DeckId(self.mw.col.decks.add_normal_deck_with_name(deck.name).id)

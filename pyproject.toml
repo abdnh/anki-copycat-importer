@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "AnkiAppImporter"
+name = "CopycatImporter"
 authors = [{ name = "Abdo", email = "abdo@abdnh.net" }]
 readme = "README.md"
 classifiers = [
@@ -18,7 +18,7 @@ dependencies = { file = ["requirements/bundle.txt"] }
 optional-dependencies.dev = { file = ["requirements/dev.txt"] }
 
 [tool.setuptools]
-package-dir = { "AnkiAppImporter" = "src" }
+package-dir = { "CopycatImporter" = "src" }
 
 [tool.setuptools_scm]
 

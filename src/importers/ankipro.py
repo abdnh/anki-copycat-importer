@@ -218,12 +218,13 @@ class AnkiProImporter(CopycatImporter):
                         media_refs_map[id] = fname_to_link(filename)
 
                     for i, side in enumerate(("front_side", "back_side")):
-                        contents = note_dict["fields"][side]
+                        contents = ""
                         media_ids = media_side_map.get(side, [])
                         if media_ids:
-                            contents += "<br>" + "<br>".join(
+                            contents += "<br>".join(
                                 media_refs_map[id] for id in media_ids
                             )
+                        contents += note_dict["fields"][side]
                         note.fields[i] = contents
                     self.mw.col.add_note(note, deck.anki_id)
                     count += 1

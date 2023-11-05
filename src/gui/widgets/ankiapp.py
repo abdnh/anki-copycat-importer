@@ -54,8 +54,8 @@ class AnkiAppWidget(ImporterWidget):
 
     def on_choose_database_file(self) -> None:
         file = getFile(self, consts.name, cb=None, filter="*")
-        assert isinstance(file, str)
         if file:
+            assert isinstance(file, str)
             file = os.path.normpath(file)
             self.form.database_file.setText(file)
 

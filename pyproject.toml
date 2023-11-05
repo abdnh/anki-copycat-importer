@@ -23,4 +23,4 @@ package-dir = { "AnkiAppImporter" = "src" }
 [tool.setuptools_scm]
 
 [project.urls]
-Repository = "https://github.com/abdnh/AnkiApp-importer/"
+Repository = "https://github.com/abdnh/anki-copycat-importer/"

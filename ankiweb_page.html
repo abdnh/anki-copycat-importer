@@ -1,14 +1,17 @@
-This add-on allows you to import decks from the copycat <a href="https://www.ankiapp.com/">AnkiApp</a>.
-It appears that AnkiApp started to <a href="https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/">paywall the deck export feature</a>. So you can no longer export a zip of your cards <a href="https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/">without paying</a>.
-This add-on salvages the cards from the SQLite database and was inspired by the Reddit post linked above. It can import cards, decks, note types, and media files.
+<p>This add-on allows you to import decks from copycat apps such as <a href="https://www.ankiapp.com/">AnkiApp</a> and <a href="https://ankipro.net/">AnkiPro</a>.</p>
 
-<p><img src="https://raw.githubusercontent.com/abdnh/AnkiApp-importer/master/images/dialog.png" alt="The add-on's dialog"></p>
+<b>AnkiApp</b>
 
-<b>How to Use</b>
+<p>It appears that AnkiApp started to <a href="https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/">paywall the deck export feature</a>.
+So you can no longer export a zip of your cards <a href="https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/">without paying</a>.</p>
+<p>This add-on salvages the cards from the SQLite database and was inspired by the Reddit post linked above. It can import cards, decks, note types, and media files.</p>
+<p><img src="https://raw.githubusercontent.com/abdnh/anki-copycat-importer/ankipro/images/ankiapp.png" alt="AnkiApp Importer"></p>
+
+<b>Usage</b>
 
 <ul>
-    <li>Make sure all your AnkiApp decks are downloaded before using the add-on. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.</li>
-    <li>Run Anki and go to <b>Tools &gt; Import From AnkiApp</b>. The add-on tries to detect AnkiApp's data folder on your system automatically. If you see the "Data folder" field already populated, you can go ahead and click Import. You can also specify a different folder location, or a single SQLite database file by checking the "Database file" option (only recommened if you don't have access to the whole data folder for some reason, as the add-on may need other files in the data folder to properly import notetypes).</li>
+<li>Make sure all your AnkiApp decks are downloaded before using the add-on. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.</li>
+<li>Run Anki and go to <i>Tools &gt; Copycat Importer &gt; Import from AnkiApp</i>. The add-on tries to detect AnkiApp's data folder on your system automatically. If you see the "Data folder" field already populated, you can go ahead and click Import. You can also specify a different folder location, or a single SQLite database file by checking the "Database file" option (only recommened if you don't have access to the whole data folder for some reason, as the add-on may need other files in the data folder to properly import notetypes).</li>
 </ul>
 
 <b>Notes &amp; Known Issues</b>
@@ -20,25 +23,45 @@ Anki to refuse to import its note if it happened to be imported as the first fie
 To prevent that, the add-on fills all empty fields with a non-breaking space.</li>
 </ul>
 
+<b>AnkiPro</b>
+
+<p><img src="https://raw.githubusercontent.com/abdnh/anki-copycat-importer/ankipro/images/ankipro.png" alt="AnkiPro Importer"></p>
+
+<b>Usage</b>
+
+<p>The add-on works by downloading your decks from the AnkiPro site, so it needs your email and password. Go to <i>Tools &gt; Copycat Importer &gt; Import from AnkiPro</i> and enter your account details.</p>
+
+<b>Notes &amp; Known Issues</b>
+
+<ul>
+<li>Importing of <a href="https://ankipro.net/library">library decks</a> is not supported. Since they are simply scraped from AnkiWeb, you can search and download the decks from <a href="https://ankiweb.net/shared/decks">AnkiWeb</a> instead.</li>
+<li>Importing of study progress and deck options is not supported yet.</li>
+</ul>
+
 <b>References</b>
 
-<ul><li><a href="https://faqs.ankiweb.net/ankiapp-is-not-part-of-the-anki-ecosystem.html">AnkiApp is not part of the Anki ecosystem - Frequently Asked Questions</a> (with some notes about importing if you have a zip file)</li><li><a href="https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/">Help to bypass Ankiapp's paywall for deck export : Anki | Reddit</a></li><li><a href="https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/">AnkiApp - Support | Can I export my flashcards from AnkiApp?</a></li></ul>
+<ul>
+<li><a href="https://faqs.ankiweb.net/ankiapp-is-not-part-of-the-anki-ecosystem.html">AnkiApp is not part of the Anki ecosystem - Frequently Asked Questions</a> (with some notes about importing if you have a zip file)</li>
+<li><a href="https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/">Help to bypass Ankiapp's paywall for deck export : Anki | Reddit</a></li>
+<li><a href="https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/">AnkiApp - Support | Can I export my flashcards from AnkiApp?</a></li>
+<li><a href="https://forums.ankiweb.net/t/ankipro-another-ripoff-anki-app/11791">AnkiPro: Another ripoff Anki app - AnkiMobile (iPhone/iPad) - Anki Forums</a></li>
+</ul>
 
 <b>Changelog</b>
 
-See <a href="https://github.com/abdnh/AnkiApp-importer/blob/master/CHANGELOG.md">CHANGELOG.md</a> for a list of changes.
+<p>See <a href="https://github.com/abdnh/anki-copycat-importer/blob/ankipro/CHANGELOG.md">CHANGELOG.md</a> for a list of changes.</p>
 
-<b>Support & feature requests</b>
+<b>Support &amp; feature requests</b>
 
-Please post any questions, bug reports, or feature requests in the <a href="https://forums.ankiweb.net/t/ankiapp-importer/16734/">support page</a> or the <a href="https://github.com/abdnh/AnkiApp-importer/issues">issue tracker</a>.
-If you want priority support for your feature/help request, I'm available for hire. You can get in touch from the aforementioned pages, via <a href="mailto:abdo@abdnh.net">email</a> or on <a href="https://www.fiverr.com/abd_nh">Fiverr</a>.
+<p>Please post any questions, bug reports, or feature requests in the <a href="https://forums.ankiweb.net/t/ankiapp-importer/16734/">support page</a> or the <a href="https://github.com/abdnh/anki-copycat-importer/issues">issue tracker</a>.</p>
+<p>If you want priority support for your feature/help request, I'm available for hire.
+You can get in touch from the aforementioned pages, via <a href="mailto:abdo@abdnh.net">email</a> or on <a href="https://www.fiverr.com/abd_nh">Fiverr</a>.</p>
 
 <b>Support me</b>
 
-Consider supporting me if you like my work:
-
-<a href="https://github.com/sponsors/abdnh"><img height='36' src="https://i.imgur.com/dAgtzcC.png"></a><a href="https://www.patreon.com/abdnh"><img height="36" src="https://i.imgur.com/mZBGpZ1.png"></a><a href="https://www.buymeacoffee.com/abdnh" target="_blank"><img height="36" src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee"></a>
-
-I'm also available for freelance add-on development on Fiverr:
-
-<a href="https://www.fiverr.com/abd_nh/develop-an-anki-addon"><img height='36' src="https://i.imgur.com/0meG4dk.png"></a>
+<p>Consider supporting me if you like my work:</p>
+<p><a href="https://github.com/sponsors/abdnh"><img height="36" src="https://i.imgur.com/dAgtzcC.png"></a>
+<a href="https://www.patreon.com/abdnh"><img height="36" src="https://i.imgur.com/mZBGpZ1.png"></a>
+<a href="https://www.buymeacoffee.com/abdnh" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 36px"></a></p>
+<p>I'm also available for freelance add-on development on Fiverr:</p>
+<p><a href="https://www.fiverr.com/abd_nh/develop-an-anki-addon"><img height="36" src="https://i.imgur.com/0meG4dk.png"></a></p>

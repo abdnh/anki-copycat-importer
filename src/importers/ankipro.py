@@ -10,6 +10,7 @@ from aqt.main import AnkiQt
 from ..log import logger
 from .errors import CopycatImporterError
 from .importer import CopycatImporter
+from .utils import fname_to_link, guess_extension
 
 
 @dataclass
@@ -76,11 +77,12 @@ class AnkiProImporter(CopycatImporter):
     def __init__(self, mw: AnkiQt, email: str, password: str):
         super().__init__()
         self.mw = mw
+        self.http_session = requests.Session()
         self.token = self._login(email, password)
 
     def _login(self, email: str, password: str) -> Optional[str]:
         try:
-            res = requests.post(
+            res = self.http_session.post(
                 f"{self.ENDPOINT}/authentication/login_with_provider",
                 data={"email": email, "password": password, "provider": "email"},
                 timeout=self.TIMEOUT,
@@ -93,21 +95,38 @@ class AnkiProImporter(CopycatImporter):
         except requests.HTTPError as exc:
             raise CopycatImporterError(f"Failed to log in: {str(exc)}") from exc
 
-    def _get(self, path: str, *args: Any, **kwrags: Any) -> requests.Response:
-        url = f"{self.ENDPOINT}/{path}"
+    def _get(self, url: str, *args: Any, **kwrags: Any) -> requests.Response:
         try:
-            return requests.get(
+            res = self.http_session.get(
                 url,
-                headers={"Authorization": f"Bearer {self.token}"},
                 timeout=self.TIMEOUT,
                 *args,
                 **kwrags,
             )
+            res.raise_for_status()
+            return res
         except requests.HTTPError as exc:
             raise CopycatImporterError(f"Request to {url} failed: {str(exc)}") from exc
 
+    def _api_get(self, path: str, *args: Any, **kwrags: Any) -> requests.Response:
+        return self._get(
+            f"{self.ENDPOINT}/{path}",
+            headers={"Authorization": f"Bearer {self.token}"},
+            *args,
+            **kwrags,
+        )
+
+    def _get_media(self, url: str) -> Optional[tuple[str, bytes]]:
+        res = self._get(url)
+        mime = res.headers.get("content-type", None)
+        if not mime:
+            return None
+        data = res.content
+
+        return mime, data
+
     def _import_decks(self) -> None:
-        res = self._get("decks")
+        res = self._api_get("decks")
         data = res.json()
         decks: dict[str, AnkiProDeck] = {}
         for deck_dict in data.get("decks", []):
@@ -148,6 +167,7 @@ class AnkiProImporter(CopycatImporter):
             changes = self.mw.col.models.add_dict(notetype)
             self.notetypes.append(self.mw.col.models.get(NotetypeId(changes.id)))
 
+    # pylint: disable=too-many-locals
     def _import_cards(self) -> int:
         count = 0
         for deck in self.decks:
@@ -159,7 +179,7 @@ class AnkiProImporter(CopycatImporter):
                 }
                 if last_fetched_card_id is not None:
                     params["after"] = last_fetched_card_id
-                res = self._get(
+                res = self._api_get(
                     "notes",
                     params=params,
                 )
@@ -180,8 +200,31 @@ class AnkiProImporter(CopycatImporter):
                     else:
                         notetype = self.notetypes[0]
                     note = self.mw.col.new_note(notetype)
-                    note["Front"] = note_dict["fields"]["front_side"]
-                    note["Back"] = note_dict["fields"]["back_side"]
+                    media_urls_map: dict[str, str] = note_dict.get(
+                        "fieldAttachmentUrls", {}
+                    )
+                    media_side_map: dict[str, list[str]] = note_dict.get(
+                        "fieldAttachmentsMap", {}
+                    )
+                    media_refs_map = {}
+                    for id, url in media_urls_map.items():
+                        media_info = self._get_media(url)
+                        if not media_info:
+                            continue
+                        mime, data = media_info
+                        ext = guess_extension(mime)
+                        filename = f"{id}{ext}"
+                        filename = self.mw.col.media.write_data(filename, data)
+                        media_refs_map[id] = fname_to_link(filename)
+
+                    for i, side in enumerate(("front_side", "back_side")):
+                        contents = note_dict["fields"][side]
+                        media_ids = media_side_map.get(side, [])
+                        if media_ids:
+                            contents += "<br>" + "<br>".join(
+                                media_refs_map[id] for id in media_ids
+                            )
+                        note.fields[i] = contents
                     self.mw.col.add_note(note, deck.anki_id)
                     count += 1
                 last_fetched_card_id = note_dicts[-1]["id"]

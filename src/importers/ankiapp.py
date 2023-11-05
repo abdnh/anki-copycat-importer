@@ -1,20 +1,16 @@
 import base64
 import dataclasses
-import html
 import json
 import re
 import sqlite3
 import time
-import urllib
 from collections.abc import Iterable, Iterator, MutableSet
 from enum import Enum
-from mimetypes import guess_extension
 from pathlib import Path
 from re import Match
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, cast
 
-import aqt.editor
 import ccl_chromium_indexeddb
 import requests
 from anki.decks import DeckDict, DeckId
@@ -26,6 +22,7 @@ from ..config import config
 from ..log import logger
 from .errors import CopycatImporterCanceled, CopycatImporterError
 from .importer import CopycatImporter
+from .utils import fname_to_link, guess_extension
 
 INVALID_FIELD_CHARS_RE = re.compile('[:"{}]')
 
@@ -193,41 +190,15 @@ class Card:
     tags: List[str]
 
 
-# https://github.com/ankitects/anki/blob/main/qt/aqt/editor.py
-
-
-def fname_to_link(fname: str) -> str:
-    ext = fname.split(".")[-1].lower()
-    if ext in aqt.editor.pics:
-        name = urllib.parse.quote(fname.encode("utf8"))
-        return f'<img src="{name}">'
-    return f"[sound:{html.escape(fname, quote=False)}]"
-
-
 # pylint: disable=too-few-public-methods
 class Media:
-    # Work around guess_extension() not recognizing some file types
-    extensions_for_mimes = {
-        # .webp is not recognized on Windows without additional software
-        # (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe)
-        "image/webp": ".webp",
-        "image/jp2": ".jp2",
-        "audio/mp3": ".mp3",
-    }
-
     # TODO: maybe explicitly close session after we finish
     http_session = requests.Session()
 
     def __init__(self, ID: str, mime: str, data: bytes):
         self.ID = ID
         self.mime = mime
-        ext = guess_extension(mime)
-        if not ext:
-            try:
-                ext = self.extensions_for_mimes[mime]
-            except KeyError as exc:
-                raise CopycatImporterError(f"unrecognized media type: {mime}") from exc
-        self.ext = ext
+        self.ext = guess_extension(mime)
         self.data = data
         self.filename: Optional[str] = None  # Filename in Anki
 

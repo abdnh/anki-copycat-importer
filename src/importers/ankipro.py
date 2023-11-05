@@ -58,17 +58,19 @@ class AnkiProImporter(CopycatImporter):
         data = res.json()
         decks: dict[str, Deck] = {}
         for deck_dict in data.get("decks", []):
-            deck = Deck(deck_dict["id"], deck_dict["name"])
-            decks[deck.id] = deck
+            if not deck_dict.get("clonedFromLibrary", False):
+                deck = Deck(deck_dict["id"], deck_dict["name"])
+                decks[deck.id] = deck
 
         def rewrite_deck_names(deck_list: list[dict], parent: str = "") -> None:
             for deck_dict in deck_list:
-                deck = decks[deck_dict["id"]]
-                if parent:
-                    deck.name = f"{parent}::{deck.name}"
-                children = deck_dict.get("children", [])
-                if children:
-                    rewrite_deck_names(children, deck.name)
+                if deck_dict["id"] in decks:
+                    deck = decks[deck_dict["id"]]
+                    if parent:
+                        deck.name = f"{parent}::{deck.name}"
+                    children = deck_dict.get("children", [])
+                    if children:
+                        rewrite_deck_names(children, deck.name)
 
         rewrite_deck_names(data.get("hierarchy", []))
         for deck in decks.values():

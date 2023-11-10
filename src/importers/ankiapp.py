@@ -379,13 +379,23 @@ class AnkiAppImporter(CopycatImporter):
             self.decks[ID] = Deck(ID, name, description)
             self._cancel_if_needed()
 
+    def _check_media_mime(self, media: Media) -> bool:
+        if not media.ext:
+            self.warnings.add(
+                f"unrecognized mime for media file {media.ID}: {media.mime}"
+            )
+            return False
+        return True
+
     def _extract_media(self) -> None:
         self._update_progress("Extracting media...")
         for row in self.con.execute("SELECT id, type, value FROM knol_blobs"):
             ID = str(row[0])
             mime = row[1]
             data = row[2]
-            self.media[ID] = Media(ID, mime, base64.b64decode(data))
+            media = Media(ID, mime, base64.b64decode(data))
+            if self._check_media_mime(media):
+                self.media[ID] = media
             self._cancel_if_needed()
 
     def _extract_cards(self) -> None:
@@ -481,7 +491,7 @@ class AnkiAppImporter(CopycatImporter):
             media_obj = self.media[blob_id]
         elif config["remote_media"]:
             media_obj = Media.from_server(blob_id)
-            if media_obj:
+            if media_obj and self._check_media_mime(media_obj):
                 filename = self.mw.col.media.write_data(
                     media_obj.ID + media_obj.ext, media_obj.data
                 )
@@ -551,8 +561,9 @@ class AnkiAppImporter(CopycatImporter):
                         data = media_file.read()
                         mime = guess_mime(data)
                         if mime:
-                            # TODO: maybe report unrecognized mime
-                            self.media[blob_id] = Media(blob_id, mime, data)
+                            media = Media(blob_id, mime, data)
+                            if self._check_media_mime(media):
+                                self.media[blob_id] = media
 
     # pylint: disable=too-many-locals
     def do_import(self) -> int:

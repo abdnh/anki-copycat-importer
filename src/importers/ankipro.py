@@ -167,7 +167,7 @@ class AnkiProImporter(CopycatImporter):
             changes = self.mw.col.models.add_dict(notetype)
             self.notetypes.append(self.mw.col.models.get(NotetypeId(changes.id)))
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches
     def _import_cards(self) -> int:
         count = 0
         for deck in self.decks:
@@ -213,9 +213,14 @@ class AnkiProImporter(CopycatImporter):
                             continue
                         mime, data = media_info
                         ext = guess_extension(mime)
-                        filename = f"{id}{ext}"
-                        filename = self.mw.col.media.write_data(filename, data)
-                        media_refs_map[id] = fname_to_link(filename)
+                        if not ext:
+                            self.warnings.add(
+                                f"unrecognized mime for media file {id}: {mime}"
+                            )
+                        else:
+                            filename = f"{id}{ext}"
+                            filename = self.mw.col.media.write_data(filename, data)
+                            media_refs_map[id] = fname_to_link(filename)
 
                     for i, side in enumerate(("front_side", "back_side")):
                         contents = ""

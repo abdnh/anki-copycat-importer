@@ -1,10 +1,9 @@
 import html
 import mimetypes
 import urllib
+from typing import Optional
 
 import aqt
-
-from .errors import CopycatImporterError
 
 # https://github.com/ankitects/anki/blob/a58b2a986ceebbf7d5d863dfa5acf206b0c2ab02/qt/aqt/editor.py#L836
 
@@ -17,7 +16,7 @@ def fname_to_link(fname: str) -> str:
     return f"[sound:{html.escape(fname, quote=False)}]"
 
 
-def guess_extension(mime: str) -> str:
+def guess_extension(mime: str) -> Optional[str]:
     # Work around guess_extension() not recognizing some file types
     extensions_for_mimes = {
         # .webp is not recognized on Windows without additional software
@@ -31,8 +30,8 @@ def guess_extension(mime: str) -> str:
     if not ext:
         try:
             ext = extensions_for_mimes[mime]
-        except KeyError as exc:
-            raise CopycatImporterError(f"unrecognized media type: {mime}") from exc
+        except KeyError:
+            return None
 
     return ext
 

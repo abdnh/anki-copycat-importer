@@ -130,6 +130,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>data_folder_checkbox</tabstop>
+  <tabstop>data_folder</tabstop>
+  <tabstop>choose_data_folder</tabstop>
+  <tabstop>database_file_checkbox</tabstop>
+  <tabstop>database_file</tabstop>
+  <tabstop>choose_database_file</tabstop>
+  <tabstop>xml_zip_checkbox</tabstop>
+  <tabstop>xml_zip</tabstop>
+  <tabstop>choose_xml_zip</tabstop>
+  <tabstop>remote_media</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

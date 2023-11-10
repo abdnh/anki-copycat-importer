@@ -277,11 +277,17 @@ class ImportedPathType(Enum):
     XML_ZIP = 3
 
 
+@dataclasses.dataclass
+class ImportedPathInfo:
+    path: Path
+    type: ImportedPathType
+
+
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
 class AnkiAppImporter(CopycatImporter):
     name = "AnkiApp"
 
-    def __init__(self, mw: AnkiQt, path: Path, path_type: ImportedPathType):
+    def __init__(self, mw: AnkiQt, paths: List[ImportedPathInfo]):
         super().__init__()
         self.mw = mw
         self.warnings: set[str] = set()
@@ -306,31 +312,33 @@ class AnkiAppImporter(CopycatImporter):
         )
         self.appdata: Optional[AnkiAppData] = None
         self.indexeddb_reader = IndexedDBReader()
-        if path_type == ImportedPathType.DATA_DIR:
-            self.appdata = AnkiAppData(path)
-            if not self.appdata.sqlite_dbs:
-                raise CopycatImporterError(
-                    "Unable to locate database file in data folder."
+        for path_info in paths:
+            if path_info.type == ImportedPathType.DATA_DIR:
+                self.appdata = AnkiAppData(path_info.path)
+                if not self.appdata.sqlite_dbs:
+                    raise CopycatImporterError(
+                        "Unable to locate database file in data folder."
+                    )
+                # TODO: maybe import all databases or allow the user to choose
+                db_path = self.appdata.sqlite_dbs[0]
+                if self.appdata.indexeddb_dbs:
+                    self.indexeddb_reader._read(
+                        self.appdata.indexeddb_dbs[0][0],
+                        self.appdata.indexeddb_dbs[0][1],
+                    )
+            elif path_info.type == ImportedPathType.DB_PATH:
+                db_path = path_info.path
+            if path_info.type != ImportedPathType.XML_ZIP:
+                self.con = sqlite3.connect(db_path)
+                self.mw.progress.update(
+                    label="Extracting collection from AnkiApp database...",
                 )
-            # TODO: maybe import all databases or allow the user to choose
-            db_path = self.appdata.sqlite_dbs[0]
-            if self.appdata.indexeddb_dbs:
-                self.indexeddb_reader._read(
-                    self.appdata.indexeddb_dbs[0][0], self.appdata.indexeddb_dbs[0][1]
-                )
-        elif path_type == ImportedPathType.DB_PATH:
-            db_path = path
-        if path_type != ImportedPathType.XML_ZIP:
-            self.con = sqlite3.connect(db_path)
-            self.mw.progress.update(
-                label="Extracting collection from AnkiApp database...",
-            )
-            self._extract_notetypes()
-            self._extract_decks()
-            self._extract_media()
-            self._extract_cards()
-        else:
-            self._extract_xml_zip(path)
+                self._extract_notetypes()
+                self._extract_decks()
+                self._extract_media()
+                self._extract_cards()
+            else:
+                self._extract_xml_zip(path_info.path)
 
     def _cancel_if_needed(self) -> None:
         if self.mw.progress.want_cancel():
@@ -485,21 +493,19 @@ class AnkiAppImporter(CopycatImporter):
         # dummy image ref
         return f'<img src="{blob_id}.jpg"></img>'
 
-    def _extract_xml_zip(self, path: Path) -> None:
-        deck_id = 1
-        card_id = 1
+    deck_id = 1
+    card_id = 1
 
+    def _extract_xml_zip(self, path: Path) -> None:
         # pylint: disable=too-many-locals
         def _read_xml(buffer: bytes) -> None:
             def field_list_to_refs(flds: List[str]) -> str:
                 return "<br>".join("{{%s}}" % f for f in flds)
 
-            nonlocal deck_id
-            nonlocal card_id
             soup = BeautifulSoup(buffer, "html.parser")
             for deck_el in soup.select("deck"):
-                deck = Deck(str(deck_id), str(deck_el["name"]), "")
-                self.decks[str(deck_id)] = deck
+                deck = Deck(str(self.deck_id), str(deck_el["name"]), "")
+                self.decks[str(self.deck_id)] = deck
                 field_names = FieldSet()
                 template_fields: List[List[str]] = [[], []]
                 for field in deck_el.select("fields > *"):
@@ -519,7 +525,7 @@ class AnkiAppImporter(CopycatImporter):
                         field_list_to_refs(template_fields[0]),
                         field_list_to_refs(template_fields[1]),
                     )
-                self.notetypes[str(deck_id)] = notetype
+                self.notetypes[str(self.deck_id)] = notetype
                 for card_el in deck_el.select("card"):
                     fields: Dict[str, str] = {}
                     for field in card_el.select("field"):
@@ -527,10 +533,10 @@ class AnkiAppImporter(CopycatImporter):
                             notetype.fields.normalize(str(field["name"]))
                         ] = field.decode_contents()
                     notetype.fields |= fields.keys()
-                    card = Card(str(deck_id), deck, fields, [])
-                    self.cards[str(card_id)] = card
-                    card_id += 1
-                deck_id += 1
+                    card = Card(str(self.deck_id), deck, fields, [])
+                    self.cards[str(self.card_id)] = card
+                    self.card_id += 1
+                self.deck_id += 1
 
         with zipfile.ZipFile(path, "r") as file:
             for info in file.infolist():

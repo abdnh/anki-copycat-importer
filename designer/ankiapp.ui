@@ -72,7 +72,7 @@
          <string>AnkiApp's SQLite database file. If you only have access to a single database file, you can use this, otherwise it's recommended to specify the data folder instead to allow the add-on to import more data</string>
         </property>
         <property name="text">
-         <string>Database file</string>
+         <string>Database files</string>
         </property>
        </widget>
       </item>
@@ -121,7 +121,7 @@
       <item row="2" column="0">
        <widget class="QRadioButton" name="xml_zip_checkbox">
         <property name="text">
-         <string>XML zip</string>
+         <string>XML zips</string>
         </property>
        </widget>
       </item>

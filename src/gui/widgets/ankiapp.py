@@ -1,6 +1,6 @@
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from aqt import mw
 from aqt.qt import *
@@ -10,12 +10,13 @@ from ...appdata import get_ankiapp_data_folder
 from ...config import config
 from ...consts import consts
 from ...forms.ankiapp import Ui_Form
-from ...importers.ankiapp import ImportedPathType
+from ...importers.ankiapp import ImportedPathInfo, ImportedPathType
 from .widget import ImporterWidget
 
 
 class AnkiAppWidget(ImporterWidget):
     def setup_ui(self) -> None:
+        self.paths: List[ImportedPathInfo] = []
         self.form = Ui_Form()
         self.form.setupUi(self)
         qconnect(self.form.data_folder_checkbox.toggled, self.on_data_folder_toggled)
@@ -65,42 +66,37 @@ class AnkiAppWidget(ImporterWidget):
     def on_choose_data_folder(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Choose AnkiApp data folder")
         if folder:
+            self.paths = [ImportedPathInfo(Path(folder), ImportedPathType.DATA_DIR)]
             self.form.data_folder.setText(folder)
 
     def on_choose_database_file(self) -> None:
-        file = getFile(self, consts.name, cb=None, filter="*")
-        if file:
-            assert isinstance(file, str)
-            file = os.path.normpath(file)
-            self.form.database_file.setText(file)
+        files = getFile(self, consts.name, cb=None, filter="*", multi=True)
+        if files:
+            files = list(files)
+            self.paths = [
+                ImportedPathInfo(Path(os.path.normpath(file)), ImportedPathType.DB_PATH)
+                for file in files
+            ]
+            self.form.database_file.setText(",".join(files))
 
     def on_choose_xml_zip(self) -> None:
-        # TODO: support importing multiple zips
-        file = getFile(self, consts.name, cb=None, filter="*.zip")
-        if file:
-            assert isinstance(file, str)
-            file = os.path.normpath(file)
-            self.form.xml_zip.setText(file)
+        files = getFile(self, consts.name, cb=None, filter="*.zip", multi=True)
+        if files:
+            files = list(files)
+            self.paths = [
+                ImportedPathInfo(Path(os.path.normpath(file)), ImportedPathType.XML_ZIP)
+                for file in files
+            ]
+            self.form.xml_zip.setText(",".join(files))
 
     def on_import(self) -> Optional[dict[str, Any]]:
-        path: Optional[Path] = None
-        path_type: Optional[ImportedPathType] = None
-        if self.form.database_file_checkbox.isChecked():
-            path = Path(self.form.database_file.text())
-            path_type = ImportedPathType.DB_PATH
-        elif self.form.data_folder_checkbox.isChecked():
-            path = Path(self.form.data_folder.text())
-            path_type = ImportedPathType.DATA_DIR
-        else:
-            path = Path(self.form.xml_zip.text())
-            path_type = ImportedPathType.XML_ZIP
-        if not path or not path.exists():
+        if all(not info.path or not info.path.exists() for info in self.paths):
             showWarning(
-                "Path is empty or doesn't exist", parent=self, title=consts.name
+                "Paths are empty or don't exist", parent=self, title=consts.name
             )
             return None
 
-        return {"mw": self.importer_dialog.mw, "path": path, "path_type": path_type}
+        return {"mw": self.importer_dialog.mw, "paths": self.paths}
 
     def on_done(self, imported_count: int) -> bool:
         if not imported_count:

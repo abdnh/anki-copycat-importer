@@ -3,6 +3,6 @@ ccl_chrome_indexeddb @ git+https://github.com/abdnh/ccl_chrome_indexeddb@anki
 # Depends on libmagic, which we only package for Windows
 python-magic
 # libmagic For Windows
-python-magic-bin
+python-magic-bin; sys.platform == "win32"
 # Cross platform but doesn't support as many file types
 puremagic

@@ -2,6 +2,6 @@
     "ankiweb_id": "2072125761",
     "homepage": "https://github.com/abdnh/anki-copycat-importer",
     "min_point_version": 50,
-    "name": "Copycat Importer (AnkiApp/AnkiPro)",
+    "name": "Copycat Importer",
     "package": "copycat_importer"
 }

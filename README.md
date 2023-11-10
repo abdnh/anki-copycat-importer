@@ -4,19 +4,30 @@ An [Anki](https://apps.ankiweb.net/) add-on to import decks from copycat apps su
 
 ## AnkiApp
 
-It appears that AnkiApp started to [paywall the deck export feature](https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/).
-So you can no longer export a zip of your cards [without paying](https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/).
-
-This add-on salvages the cards from the SQLite database and was inspired by the Reddit post linked above. It can import cards, decks, note types, and media files.
-
 ![AnkiApp Importer](images/ankiapp.png)
 
-### Usage
+Go to _Tools > Copycat Importer > Import from AnkiApp_.
 
--   Make sure all your AnkiApp decks are downloaded before using the add-on. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.
--   Run Anki and go to _Tools > Copycat Importer > Import from AnkiApp_. The add-on tries to detect AnkiApp's data folder on your system automatically. If you see the "Data folder" field already populated, you can go ahead and click Import. You can also specify a different folder location, or a single SQLite database file by checking the "Database file" option (only recommened if you don't have access to the whole data folder for some reason, as the add-on may need other files in the data folder to properly import notetypes).
+Several methods to import AnkiApp decks are supported. All methods generally support importing cards, decks, note types, and media files:
 
-### Notes & Known Issues
+### Data folder
+
+If you have AnkiApp installed on your computer, it's recommended to try this option first. The add-on tries to detect the location of your AnkiApp data and fill in the Data folder field with its path. You need to make sure all your AnkiApp decks are downloaded locally before using this option. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.
+
+### Database files
+
+If you only have SQLite database files instead of a full data folder (such as the files stored in the databases subfolder of the data folder), you can use this option.
+This is only recommened if you don't have access to the whole data folder for some reason, as the add-on may need other files in the data folder to properly import notetypes.
+
+### XML zips
+
+If the Export button under the three-dot menu in AnkiApp is enabled for your account, you can use it to export a zip file and use this option to import the deck.
+
+<img alt="AnkiApp's Export button" src="images/ankiapp-export.png" width="600">
+
+If the button is greyed out, see [this](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo) for a workaround.
+
+### Known Issues
 
 -   Study progress is not imported.
 -   AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause
@@ -27,11 +38,9 @@ This add-on salvages the cards from the SQLite database and was inspired by the 
 
 ![AnkiPro Importer](images/ankipro.png)
 
-### Usage
-
 The add-on works by downloading your decks from the AnkiPro site, so it needs your email and password. Go to _Tools > Copycat Importer > Import from AnkiPro_ and enter your account details.
 
-### Notes & Known Issues
+### Known Issues
 
 -   Importing of [library decks](https://ankipro.net/library) is not supported. Since they are simply scraped from AnkiWeb, you can search and download the decks from [AnkiWeb](https://ankiweb.net/shared/decks) instead.
 -   Importing of study progress and deck options is not supported yet.

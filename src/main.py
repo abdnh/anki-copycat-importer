@@ -8,7 +8,6 @@ from aqt.qt import QAction, QMenu, qconnect
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
 
-from .consts import consts
 from .gui.dialog import ImporterDialog
 from .importers import IMPORTERS, CopycatImporter
 
@@ -18,7 +17,7 @@ def on_action(importer_class: Type[CopycatImporter]) -> None:
     dialog.open()
 
 
-menu = QMenu(consts.name, mw)
+menu = QMenu("Copycat Importer", mw)
 for importer_class in IMPORTERS:
     action = QAction(f"Import from {importer_class.name}", menu)
     qconnect(

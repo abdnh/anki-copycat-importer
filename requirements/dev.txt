@@ -1,10 +1,10 @@
-anki==23.10
+anki==23.10.1
     # via aqt
 ankiscripts @ git+https://github.com/abdnh/ankiscripts@eff333857945ea9587942b9f34a2b6d42a26b589
     # via -r requirements/dev.in
 ankiutils @ git+https://github.com/abdnh/ankiutils@b5c5dfd2a16446781cc2de06fdbd019cfa733c94
     # via -r requirements\bundle.in
-aqt==23.10
+aqt==23.10.1
     # via -r requirements/dev.in
 astroid==3.0.1
     # via pylint
@@ -16,7 +16,7 @@ beautifulsoup4==4.12.2
     # via
     #   anki
     #   aqt
-black==23.10.1
+black==23.11.0
     # via -r requirements/dev.in
 blinker==1.7.0
     # via flask
@@ -42,7 +42,9 @@ colorama==0.4.6
     #   pylint
     #   pytest
 coverage==7.3.2
-    # via pytest-cov
+    # via
+    #   coverage
+    #   pytest-cov
 decorator==5.1.1
     # via anki
 dill==0.3.7
@@ -129,6 +131,8 @@ psutil==5.9.6 ; sys_platform == "win32"
     #   -r requirements/dev.in
     #   anki
     #   aqt
+puremagic==1.15
+    # via -r requirements\bundle.in
 pylint==3.0.2
     # via -r requirements/dev.in
 pyproject-hooks==1.0.0
@@ -156,6 +160,10 @@ pytest==7.4.3
     #   pytest-cov
 pytest-cov==4.1.0
     # via -r requirements/dev.in
+python-magic==0.4.27
+    # via -r requirements\bundle.in
+python-magic-bin==0.4.14
+    # via -r requirements\bundle.in
 pyupgrade==3.15.0
     # via -r requirements/dev.in
 pywin32==306 ; sys_platform == "win32"
@@ -196,6 +204,10 @@ tomli==2.0.1
     #   pytest
 tomlkit==0.12.2
     # via pylint
+types-beautifulsoup4==4.12.0.7
+    # via -r requirements/dev.in
+types-html5lib==1.1.11.15
+    # via types-beautifulsoup4
 types-requests==2.31.0.10
     # via -r requirements/dev.in
 typing-extensions==4.8.0

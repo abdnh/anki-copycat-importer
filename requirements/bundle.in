@@ -1,2 +1,8 @@
 ankiutils @ git+https://github.com/abdnh/ankiutils@b5c5dfd2a16446781cc2de06fdbd019cfa733c94
 ccl_chrome_indexeddb @ git+https://github.com/abdnh/ccl_chrome_indexeddb@anki
+# Depends on libmagic, which we only package for Windows
+python-magic
+# libmagic For Windows
+python-magic-bin
+# Cross platform but doesn't support as many file types
+puremagic

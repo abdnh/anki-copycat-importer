@@ -4,6 +4,7 @@ import json
 import re
 import sqlite3
 import time
+import zipfile
 from collections.abc import Iterable, Iterator, MutableSet
 from enum import Enum
 from pathlib import Path
@@ -16,13 +17,14 @@ import requests
 from anki.decks import DeckDict, DeckId
 from anki.models import NotetypeDict, NotetypeId
 from aqt.main import AnkiQt
+from bs4 import BeautifulSoup
 
 from ..appdata import AnkiAppData
 from ..config import config
 from ..log import logger
 from .errors import CopycatImporterCanceled, CopycatImporterError
 from .importer import CopycatImporter
-from .utils import fname_to_link, guess_extension
+from .utils import fname_to_link, guess_extension, guess_mime
 
 INVALID_FIELD_CHARS_RE = re.compile('[:"{}]')
 
@@ -163,9 +165,13 @@ class FallbackNotetype(NoteType):
         }"""
     )
 
-    def __init__(self, extra_fields: FieldSet = FieldSet()) -> None:
+    def __init__(
+        self,
+        extra_fields: FieldSet = FieldSet(),
+        name: str = "AnkiApp Fallback Notetype",
+    ) -> None:
         super().__init__(
-            "AnkiApp Fallback Notetype",
+            name,
             FieldSet(["Front", "Back"]),
             self.CSS,
             self.FRONT,
@@ -268,6 +274,7 @@ class IndexedDBReader:
 class ImportedPathType(Enum):
     DATA_DIR = 1
     DB_PATH = 2
+    XML_ZIP = 3
 
 
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
@@ -277,6 +284,11 @@ class AnkiAppImporter(CopycatImporter):
     def __init__(self, mw: AnkiQt, path: Path, path_type: ImportedPathType):
         super().__init__()
         self.mw = mw
+        self.warnings: set[str] = set()
+        self.decks: Dict[str, Deck] = {}
+        self.notetypes: Dict[str, NoteType] = {}
+        self.media: Dict[str, Media] = {}
+        self.cards: Dict[str, Card] = {}
         self.BLOB_REF_PATTERNS = (
             # Use Anki's HTML media patterns too for completeness
             *(re.compile(p) for p in mw.col.media.html_media_regexps),
@@ -306,17 +318,19 @@ class AnkiAppImporter(CopycatImporter):
                 self.indexeddb_reader._read(
                     self.appdata.indexeddb_dbs[0][0], self.appdata.indexeddb_dbs[0][1]
                 )
-        else:
+        elif path_type == ImportedPathType.DB_PATH:
             db_path = path
-        self.con = sqlite3.connect(db_path)
-        self.mw.progress.update(
-            label="Extracting collection from AnkiApp database...",
-        )
-        self._extract_notetypes()
-        self._extract_decks()
-        self._extract_media()
-        self._extract_cards()
-        self.warnings: set[str] = set()
+        if path_type != ImportedPathType.XML_ZIP:
+            self.con = sqlite3.connect(db_path)
+            self.mw.progress.update(
+                label="Extracting collection from AnkiApp database...",
+            )
+            self._extract_notetypes()
+            self._extract_decks()
+            self._extract_media()
+            self._extract_cards()
+        else:
+            self._extract_xml_zip(path)
 
     def _cancel_if_needed(self) -> None:
         if self.mw.progress.want_cancel():
@@ -332,7 +346,6 @@ class AnkiAppImporter(CopycatImporter):
         self._cancel_if_needed()
 
     def _extract_notetypes(self) -> None:
-        self.notetypes: Dict[str, NoteType] = {}
         self._update_progress("Extracting notetypes...")
         for row in self.con.execute("SELECT * FROM layouts"):
             ID, name, templates, style = row[:4]
@@ -350,7 +363,6 @@ class AnkiAppImporter(CopycatImporter):
             self._cancel_if_needed()
 
     def _extract_decks(self) -> None:
-        self.decks: Dict[str, Deck] = {}
         self._update_progress("Extracting decks...")
         for row in self.con.execute("SELECT * FROM decks"):
             ID = row[0]
@@ -360,7 +372,6 @@ class AnkiAppImporter(CopycatImporter):
             self._cancel_if_needed()
 
     def _extract_media(self) -> None:
-        self.media: Dict[str, Media] = {}
         self._update_progress("Extracting media...")
         for row in self.con.execute("SELECT id, type, value FROM knol_blobs"):
             ID = str(row[0])
@@ -370,7 +381,6 @@ class AnkiAppImporter(CopycatImporter):
             self._cancel_if_needed()
 
     def _extract_cards(self) -> None:
-        self.cards: Dict[str, Card] = {}
         self._update_progress("Extracting cards...")
         for row in self.con.execute(
             "select c.id, c.knol_id, c.layout_id, d.deck_id from cards c, cards_decks d where c.id = d.card_id"
@@ -474,6 +484,69 @@ class AnkiAppImporter(CopycatImporter):
         self.warnings.add(f"Missing media file: {blob_id}")
         # dummy image ref
         return f'<img src="{blob_id}.jpg"></img>'
+
+    def _extract_xml_zip(self, path: Path) -> None:
+        deck_id = 1
+        card_id = 1
+
+        # pylint: disable=too-many-locals
+        def _read_xml(buffer: bytes) -> None:
+            def field_list_to_refs(flds: List[str]) -> str:
+                return "<br>".join("{{%s}}" % f for f in flds)
+
+            nonlocal deck_id
+            nonlocal card_id
+            soup = BeautifulSoup(buffer, "html.parser")
+            for deck_el in soup.select("deck"):
+                deck = Deck(str(deck_id), str(deck_el["name"]), "")
+                self.decks[str(deck_id)] = deck
+                field_names = FieldSet()
+                template_fields: List[List[str]] = [[], []]
+                for field in deck_el.select("fields > *"):
+                    field_names.add(str(field["name"]))
+                    for i, side in enumerate(field["sides"]):
+                        if side == "1":
+                            template_fields[i].append(str(field["name"]))
+                notetype_name = f"{deck.name} Notetype"
+                notetype: NoteType
+                if any(not t for t in template_fields):
+                    notetype = FallbackNotetype(field_names, notetype_name)
+                else:
+                    notetype = NoteType(
+                        notetype_name,
+                        field_names,
+                        FallbackNotetype.CSS,
+                        field_list_to_refs(template_fields[0]),
+                        field_list_to_refs(template_fields[1]),
+                    )
+                self.notetypes[str(deck_id)] = notetype
+                for card_el in deck_el.select("card"):
+                    fields: Dict[str, str] = {}
+                    for field in card_el.select("field"):
+                        fields[
+                            notetype.fields.normalize(str(field["name"]))
+                        ] = field.decode_contents()
+                    notetype.fields |= fields.keys()
+                    card = Card(str(deck_id), deck, fields, [])
+                    self.cards[str(card_id)] = card
+                    card_id += 1
+                deck_id += 1
+
+        with zipfile.ZipFile(path, "r") as file:
+            for info in file.infolist():
+                if info.filename.endswith(".xml"):
+                    with file.open(info) as xml_file:
+                        _read_xml(xml_file.read())
+                elif info.filename.startswith("blobs/"):
+                    blob_id = info.filename.split("blobs/", maxsplit=1)[1]
+                    if not blob_id:
+                        continue
+                    with file.open(info, "r") as media_file:
+                        data = media_file.read()
+                        mime = guess_mime(data)
+                        if mime:
+                            # TODO: maybe report unrecognized mime
+                            self.media[blob_id] = Media(blob_id, mime, data)
 
     # pylint: disable=too-many-locals
     def do_import(self) -> int:

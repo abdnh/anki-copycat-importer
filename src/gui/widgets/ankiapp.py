@@ -22,6 +22,7 @@ class AnkiAppWidget(ImporterWidget):
         qconnect(
             self.form.database_file_checkbox.toggled, self.on_database_file_toggled
         )
+        qconnect(self.form.xml_zip_checkbox.toggled, self.on_xml_zip_toggled)
         self.form.remote_media.setChecked(config["remote_media"])
         qconnect(self.form.remote_media.toggled, self.on_remote_media_toggled)
         ankiapp_data_folder = get_ankiapp_data_folder()
@@ -29,6 +30,7 @@ class AnkiAppWidget(ImporterWidget):
             self.form.data_folder.setText(ankiapp_data_folder)
         qconnect(self.form.choose_data_folder.clicked, self.on_choose_data_folder)
         qconnect(self.form.choose_database_file.clicked, self.on_choose_database_file)
+        qconnect(self.form.choose_xml_zip.clicked, self.on_choose_xml_zip)
 
     def on_data_folder_toggled(self, checked: bool) -> None:
         if checked:
@@ -36,11 +38,24 @@ class AnkiAppWidget(ImporterWidget):
             self.form.choose_data_folder.setEnabled(True)
             self.form.database_file.setEnabled(False)
             self.form.choose_database_file.setEnabled(False)
+            self.form.xml_zip.setEnabled(False)
+            self.form.choose_xml_zip.setEnabled(False)
 
     def on_database_file_toggled(self, checked: bool) -> None:
         if checked:
             self.form.database_file.setEnabled(True)
             self.form.choose_database_file.setEnabled(True)
+            self.form.data_folder.setEnabled(False)
+            self.form.choose_data_folder.setEnabled(False)
+            self.form.xml_zip.setEnabled(False)
+            self.form.choose_xml_zip.setEnabled(False)
+
+    def on_xml_zip_toggled(self, checked: bool) -> None:
+        if checked:
+            self.form.xml_zip.setEnabled(True)
+            self.form.choose_xml_zip.setEnabled(True)
+            self.form.database_file.setEnabled(False)
+            self.form.choose_database_file.setEnabled(False)
             self.form.data_folder.setEnabled(False)
             self.form.choose_data_folder.setEnabled(False)
 
@@ -59,15 +74,26 @@ class AnkiAppWidget(ImporterWidget):
             file = os.path.normpath(file)
             self.form.database_file.setText(file)
 
+    def on_choose_xml_zip(self) -> None:
+        # TODO: support importing multiple zips
+        file = getFile(self, consts.name, cb=None, filter="*.zip")
+        if file:
+            assert isinstance(file, str)
+            file = os.path.normpath(file)
+            self.form.xml_zip.setText(file)
+
     def on_import(self) -> Optional[dict[str, Any]]:
         path: Optional[Path] = None
         path_type: Optional[ImportedPathType] = None
         if self.form.database_file_checkbox.isChecked():
             path = Path(self.form.database_file.text())
             path_type = ImportedPathType.DB_PATH
-        else:
+        elif self.form.data_folder_checkbox.isChecked():
             path = Path(self.form.data_folder.text())
             path_type = ImportedPathType.DATA_DIR
+        else:
+            path = Path(self.form.xml_zip.text())
+            path_type = ImportedPathType.XML_ZIP
         if not path or not path.exists():
             showWarning(
                 "Path is empty or doesn't exist", parent=self, title=consts.name

@@ -29,6 +29,9 @@ class AnkiAppWidget(ImporterWidget):
         ankiapp_data_folder = get_ankiapp_data_folder()
         if ankiapp_data_folder:
             self.form.data_folder.setText(ankiapp_data_folder)
+            self.paths.append(
+                ImportedPathInfo(Path(ankiapp_data_folder), ImportedPathType.DATA_DIR)
+            )
         qconnect(self.form.choose_data_folder.clicked, self.on_choose_data_folder)
         qconnect(self.form.choose_database_file.clicked, self.on_choose_database_file)
         qconnect(self.form.choose_xml_zip.clicked, self.on_choose_xml_zip)

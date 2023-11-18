@@ -559,11 +559,17 @@ class AnkiAppImporter(CopycatImporter):
                         continue
                     with file.open(info, "r") as media_file:
                         data = media_file.read()
-                        mime = guess_mime(data)
-                        if mime:
-                            media = Media(blob_id, mime, data)
-                            if self._check_media_mime(media):
-                                self.media[blob_id] = media
+                        try:
+                            mime = guess_mime(data)
+                            if mime:
+                                media = Media(blob_id, mime, data)
+                                if self._check_media_mime(media):
+                                    self.media[blob_id] = media
+                        except Exception as exc:
+                            basename = info.filename.split("blobs/")[1]
+                            self.warnings.add(
+                                f"Failed to detect type of media file {basename}: {exc}"
+                            )
 
     # pylint: disable=too-many-locals
     def do_import(self) -> int:

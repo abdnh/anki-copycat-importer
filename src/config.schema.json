@@ -1,7 +1,17 @@
 {
     "properties": {
-        "remote_media": {
-            "type": "boolean"
+        "importer_options": {
+            "type": "object",
+            "properties": {
+                "ankiapp": {
+                    "remote_media": {
+                        "type": "boolean"
+                    }
+                },
+                "ankipro": {
+                    "type": "object"
+                }
+            }
         }
     },
     "type": "object"

@@ -489,7 +489,7 @@ class AnkiAppImporter(CopycatImporter):
         media_obj = None
         if blob_id in self.media:
             media_obj = self.media[blob_id]
-        elif config["remote_media"]:
+        elif config["importer_options"]["ankiapp"]["remote_media"]:
             media_obj = Media.from_server(blob_id)
             if media_obj and self._check_media_mime(media_obj):
                 filename = self.mw.col.media.write_data(

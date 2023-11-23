@@ -24,7 +24,9 @@ class AnkiAppWidget(ImporterWidget):
             self.form.database_file_checkbox.toggled, self.on_database_file_toggled
         )
         qconnect(self.form.xml_zip_checkbox.toggled, self.on_xml_zip_toggled)
-        self.form.remote_media.setChecked(config["remote_media"])
+        self.form.remote_media.setChecked(
+            config["importer_options"]["ankiapp"]["remote_media"]
+        )
         qconnect(self.form.remote_media.toggled, self.on_remote_media_toggled)
         ankiapp_data_folder = get_ankiapp_data_folder()
         if ankiapp_data_folder:
@@ -64,7 +66,9 @@ class AnkiAppWidget(ImporterWidget):
             self.form.choose_data_folder.setEnabled(False)
 
     def on_remote_media_toggled(self, checked: bool) -> None:
-        config["remote_media"] = checked
+        importer_options = config["importer_options"]
+        importer_options["ankiapp"]["remote_media"] = checked
+        config["importer_options"] = importer_options
 
     def on_choose_data_folder(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Choose AnkiApp data folder")

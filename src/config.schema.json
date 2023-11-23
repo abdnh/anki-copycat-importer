@@ -9,7 +9,12 @@
                     }
                 },
                 "ankipro": {
-                    "type": "object"
+                    "type": "object",
+                    "properties": {
+                        "token": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         }

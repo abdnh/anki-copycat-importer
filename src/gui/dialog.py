@@ -24,7 +24,7 @@ class ImporterDialog(ankiutils.gui.dialog.Dialog):
 
     def setup_ui(self) -> None:
         self.setWindowTitle(f"{consts.name} - {self.importer_class.name}")
-        import_button = QPushButton("Import", self)
+        import_button = self.import_button = QPushButton("Import", self)
         qconnect(import_button.clicked, self.on_import)
         layout = QFormLayout(self)
         self.importer_widget = IMPORTER_WIDGETS[self.importer_class.name](self)

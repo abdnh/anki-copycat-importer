@@ -74,26 +74,11 @@ class AnkiProImporter(CopycatImporter):
     ENDPOINT = "https://api.ankipro.net/api"
     TIMEOUT = 60
 
-    def __init__(self, mw: AnkiQt, email: str, password: str):
+    def __init__(self, mw: AnkiQt, token: str):
         super().__init__()
         self.mw = mw
         self.http_session = requests.Session()
-        self.token = self._login(email, password)
-
-    def _login(self, email: str, password: str) -> Optional[str]:
-        try:
-            res = self.http_session.post(
-                f"{self.ENDPOINT}/authentication/login_with_provider",
-                data={"email": email, "password": password, "provider": "email"},
-                timeout=self.TIMEOUT,
-            )
-            res.raise_for_status()
-            j = res.json()
-            if isinstance(j, dict):
-                return j.get("token")
-            return None
-        except requests.HTTPError as exc:
-            raise CopycatImporterError(f"Failed to log in: {str(exc)}") from exc
+        self.token = token
 
     def _get(self, url: str, *args: Any, **kwrags: Any) -> requests.Response:
         try:

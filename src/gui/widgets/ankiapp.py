@@ -25,7 +25,7 @@ class AnkiAppWidget(ImporterWidget):
         )
         qconnect(self.form.xml_zip_checkbox.toggled, self.on_xml_zip_toggled)
         self.form.remote_media.setChecked(
-            config["importer_options"]["ankiapp"]["remote_media"]
+            config.importer_options("ankiapp").get("remote_media", True)
         )
         qconnect(self.form.remote_media.toggled, self.on_remote_media_toggled)
         ankiapp_data_folder = get_ankiapp_data_folder()

@@ -20,27 +20,33 @@
    <string>AnkiApp</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
+   <item row="2" column="1">
+    <widget class="QPushButton" name="login_button">
      <property name="text">
-      <string>Email</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Password</string>
+      <string>Open ankipro.net to log in</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="email"/>
+    <widget class="QLabel" name="login_status">
+     <property name="text">
+      <string>Status: not logged in</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QLineEdit" name="password">
-     <property name="echoMode">
-      <enum>QLineEdit::Password</enum>
+    <widget class="QLabel" name="login_instructions">
+     <property name="text">
+      <string>Click the button below to open ankiPro.net. Then can close the page once you log in to your account.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

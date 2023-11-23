@@ -3,6 +3,8 @@
         "ankiapp": {
             "remote_media": true
         },
-        "ankipro": {}
+        "ankipro": {
+            "token": ""
+        }
     }
 }

@@ -38,7 +38,7 @@ If the button is greyed out, see [this](https://forums.ankiweb.net/t/copycat-imp
 
 ![AnkiPro Importer](images/ankipro.png)
 
-The add-on works by downloading your decks from the AnkiPro site, so it needs your email and password. Go to _Tools > Copycat Importer > Import from AnkiPro_ and enter your account details.
+The add-on works by downloading your decks from the AnkiPro site. Go to _Tools > Copycat Importer > Import from AnkiPro_ and follow the instructions.
 
 ### Known Issues
 

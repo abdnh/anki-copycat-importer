@@ -497,7 +497,7 @@ class AnkiAppImporter(CopycatImporter):
                 )
                 media_obj.filename = filename
                 self.media[media_obj.ID] = media_obj
-        if media_obj:
+        if media_obj and media_obj.filename:
             return fname_to_link(media_obj.filename)
         self.warnings.add(f"Missing media file: {blob_id}")
         # dummy image ref

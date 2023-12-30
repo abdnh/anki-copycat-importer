@@ -44,7 +44,7 @@ class ImporterDialog(ankiutils.gui.dialog.Dialog):
         )
         self.mw.progress.set_title(consts.name)
 
-        def start_importing() -> Optional[tuple[int, set[str]]]:
+        def start_importing() -> Optional[tuple[int, list[str]]]:
             importer = self.importer_class(**options)
             return importer.do_import(), importer.warnings
 

@@ -7,7 +7,7 @@ class CopycatImporter(ABC):
     name: str
 
     def __init__(self, *args: Any, **kwargs: Any):
-        self.warnings: set[str] = set()
+        self.warnings: list[str] = []
 
     @abstractmethod
     def do_import(self) -> int:

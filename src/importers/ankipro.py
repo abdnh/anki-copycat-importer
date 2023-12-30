@@ -199,7 +199,7 @@ class AnkiProImporter(CopycatImporter):
                         mime, data = media_info
                         ext = guess_extension(mime)
                         if not ext:
-                            self.warnings.add(
+                            self.warnings.append(
                                 f"unrecognized mime for media file {id}: {mime}"
                             )
                         else:

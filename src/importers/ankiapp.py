@@ -290,7 +290,6 @@ class AnkiAppImporter(CopycatImporter):
     def __init__(self, mw: AnkiQt, paths: List[ImportedPathInfo]):
         super().__init__()
         self.mw = mw
-        self.warnings: set[str] = set()
         self.decks: Dict[str, Deck] = {}
         self.notetypes: Dict[str, NoteType] = {}
         self.media: Dict[str, Media] = {}
@@ -381,7 +380,7 @@ class AnkiAppImporter(CopycatImporter):
 
     def _check_media_mime(self, media: Media) -> bool:
         if not media.ext:
-            self.warnings.add(
+            self.warnings.append(
                 f"unrecognized mime for media file {media.ID}: {media.mime}"
             )
             return False
@@ -499,7 +498,7 @@ class AnkiAppImporter(CopycatImporter):
                 self.media[media_obj.ID] = media_obj
         if media_obj and media_obj.filename:
             return fname_to_link(media_obj.filename)
-        self.warnings.add(f"Missing media file: {blob_id}")
+        self.warnings.append(f"Missing media file: {blob_id}")
         # dummy image ref
         return f'<img src="{blob_id}.jpg"></img>'
 
@@ -567,7 +566,7 @@ class AnkiAppImporter(CopycatImporter):
                                     self.media[blob_id] = media
                         except Exception as exc:
                             basename = info.filename.split("blobs/")[1]
-                            self.warnings.add(
+                            self.warnings.append(
                                 f"Failed to detect type of media file {basename}: {exc}"
                             )
 

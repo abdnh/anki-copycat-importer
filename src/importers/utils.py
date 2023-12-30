@@ -24,6 +24,7 @@ def guess_extension(mime: str) -> Optional[str]:
         "image/webp": ".webp",
         "image/jp2": ".jp2",
         "audio/mp3": ".mp3",
+        "audio/x-m4a": ".m4a",
     }
 
     ext = mimetypes.guess_extension(mime)

@@ -2,7 +2,7 @@ ankiutils @ git+https://github.com/abdnh/ankiutils@b5c5dfd2a16446781cc2de06fdbd0
     # via -r requirements/bundle.in
 ccl-chrome-indexeddb @ git+https://github.com/abdnh/ccl_chrome_indexeddb@anki
     # via -r requirements/bundle.in
-puremagic==1.15
+puremagic==1.20
     # via -r requirements/bundle.in
 python-magic==0.4.27
     # via -r requirements/bundle.in

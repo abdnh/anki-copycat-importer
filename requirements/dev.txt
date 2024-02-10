@@ -4,7 +4,7 @@ ankiscripts @ git+https://github.com/abdnh/ankiscripts@ed96ad699fe9dd52e6baec92e
     # via
     #   -r requirements/dev.in
     #   ankiscripts
-ankiutils @ git+https://github.com/abdnh/ankiutils@b5c5dfd2a16446781cc2de06fdbd019cfa733c94
+ankiutils @ git+https://github.com/abdnh/ankiutils@29652295f7e1d2aff55e000a66fbc239de8c6224
     # via -r requirements\bundle.in
 aqt==23.12.1
     # via -r requirements/dev.in

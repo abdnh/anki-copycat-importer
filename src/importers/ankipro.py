@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from textwrap import dedent
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import requests
 from anki.decks import DeckId
 from anki.models import NotetypeDict, NotetypeId
-from aqt.main import AnkiQt
+
+if TYPE_CHECKING:
+    from aqt.main import AnkiQt
 
 from ..log import logger
 from .errors import CopycatImporterError
@@ -74,7 +76,7 @@ class AnkiProImporter(CopycatImporter):
     ENDPOINT = "https://api.ankipro.net/api"
     TIMEOUT = 60
 
-    def __init__(self, mw: AnkiQt, token: str):
+    def __init__(self, mw: "AnkiQt", token: str):
         super().__init__()
         self.mw = mw
         self.http_session = requests.Session()

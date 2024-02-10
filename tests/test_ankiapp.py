@@ -37,7 +37,7 @@ def simple_importer(mw: AnkiQt) -> AnkiAppImporter:
         ImportedPathType,
     )
 
-    paths = [ImportedPathInfo(DATA_DIR / "simple", ImportedPathType.DB_PATH)]
+    paths = [ImportedPathInfo(DATA_DIR / "simple.db", ImportedPathType.DB_PATH)]
     return AnkiAppImporter(mw, paths)
 
 

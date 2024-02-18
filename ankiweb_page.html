@@ -20,7 +20,11 @@ This is only recommened if you don't have access to the whole data folder for so
 <p>If the Export button under the three-dot menu in AnkiApp is enabled for your account, you can use it to export a zip file and use this option to import the deck.</p>
 <img alt="AnkiApp's Export button" src="https://raw.githubusercontent.com/abdnh/anki-copycat-importer/master/images/ankiapp-export.png" width="600">
 
-<p>If the button is greyed out, see <a href="https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo">this</a> for a workaround.</p>
+<p>If the button is greyed out, add the following code as a bookmark to your web browser, then click on it while on the deck page to activate the button:</p>
+<code>javascript:void(document.querySelector("#hover-triggerExport").removeAttribute("disabled"))
+</code>
+
+<p>See <a href="https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo">this</a> for another workaround.</p>
 
 <b>Known Issues</b>
 

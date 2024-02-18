@@ -25,7 +25,13 @@ If the Export button under the three-dot menu in AnkiApp is enabled for your acc
 
 <img alt="AnkiApp's Export button" src="images/ankiapp-export.png" width="600">
 
-If the button is greyed out, see [this](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo) for a workaround.
+If the button is greyed out, add the following code as a bookmark to your web browser, then click on it while on the deck page to activate the button:
+
+```
+javascript:void(document.querySelector("#hover-triggerExport").removeAttribute("disabled"))
+```
+
+See [this](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo) for another workaround.
 
 ### Known Issues
 

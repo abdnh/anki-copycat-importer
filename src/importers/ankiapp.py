@@ -125,7 +125,7 @@ class NoteType:
         for field in self.fields:
             template = re.sub(
                 r"\{\{(#|/|^)?%s\}\}" % re.escape(field),
-                "{{\\1%s}}" % fix_field_name(field),
+                "{{\\g<1>%s}}" % fix_field_name(field),
                 template,
                 flags=re.IGNORECASE,
             )

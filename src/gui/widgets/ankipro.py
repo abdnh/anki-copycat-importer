@@ -3,7 +3,14 @@ from typing import Any, Optional
 from aqt.main import AnkiQt
 from aqt.qt import *
 from aqt.utils import showWarning
-from aqt.webview import QWebEnginePage, QWebEngineProfile
+from aqt.webview import QWebEnginePage, QWebEngineProfile, QWebEngineUrlRequestInfo
+
+if qtmajor > 5:
+    from PyQt6.QtNetwork import QNetworkCookie
+else:
+    from PyQt5.QtNetwork import (  # type: ignore # pylint: disable=import-error
+        QNetworkCookie,
+    )
 
 from ...config import config
 from ...consts import consts
@@ -24,6 +31,11 @@ class AnkiProProfile(QWebEngineProfile):
         super().__init__("copycat_importer", parent)
         self.token = ""
         self.setUrlRequestInterceptor(AnkiProRequestInterceptor(self))
+        qconnect(self.cookieStore().cookieAdded, self.on_cookie_added)
+
+    def on_cookie_added(self, cookie: QNetworkCookie) -> None:
+        if cookie.name().data().decode() == "AnkiProToken":
+            self.token = cookie.value().data().decode()
 
 
 web_profile = AnkiProProfile()
@@ -88,15 +100,23 @@ class AnkiProLoginDialog(QDialog):
     def closeEvent(self, event: QCloseEvent) -> None:
         base_close = super().closeEvent
 
-        def on_login(token: str) -> None:
-            if token:
-                importer_options = config["importer_options"]
-                importer_options["ankipro"]["token"] = token
-                config["importer_options"] = importer_options
+        def on_token(token: str) -> None:
+            importer_options = config["importer_options"]
+            importer_options["ankipro"]["token"] = token
+            config["importer_options"] = importer_options
             base_close(event)
             self.on_finished()
 
-        self.web.page().runJavaScript('localStorage.getItem("AnkiProToken");', on_login)
+        def on_login(token: str) -> None:
+            if token:
+                on_token(token)
+
+        if web_profile.token:
+            on_token(web_profile.token)
+        else:
+            self.web.page().runJavaScript(
+                'localStorage.getItem("AnkiProToken");', on_login
+            )
 
 
 class AnkiProWidget(ImporterWidget):

@@ -10,7 +10,23 @@ from ...consts import consts
 from ...forms.ankipro import Ui_Form
 from .widget import ImporterWidget
 
-web_profile = QWebEngineProfile("copycat_importer")
+
+class AnkiProRequestInterceptor(QWebEngineUrlRequestInterceptor):
+    def interceptRequest(self, info: QWebEngineUrlRequestInfo) -> None:
+        info.setHttpHeader(
+            b"User-Agent",
+            b"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        )
+
+
+class AnkiProProfile(QWebEngineProfile):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
+        super().__init__("copycat_importer", parent)
+        self.token = ""
+        self.setUrlRequestInterceptor(AnkiProRequestInterceptor(self))
+
+
+web_profile = AnkiProProfile()
 
 
 class AnkiProWebPage(QWebEnginePage):

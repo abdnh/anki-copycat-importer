@@ -14,6 +14,8 @@ from .errors import CopycatImporterError
 from .importer import CopycatImporter
 from .utils import fname_to_link, guess_extension
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+
 
 @dataclass
 class AnkiProDeck:
@@ -83,11 +85,14 @@ class AnkiProImporter(CopycatImporter):
         self.token = token
 
     def _get(self, url: str, *args: Any, **kwrags: Any) -> requests.Response:
+        headers = {"User-Agent": USER_AGENT}
+        headers.update(kwrags.pop("headers", {}))
         try:
             res = self.http_session.get(
                 url,
                 timeout=self.TIMEOUT,
                 *args,
+                headers=headers,
                 **kwrags,
             )
             res.raise_for_status()

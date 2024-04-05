@@ -15,6 +15,7 @@ else:
 from ...config import config
 from ...consts import consts
 from ...forms.ankipro import Ui_Form
+from ...importers.ankipro import USER_AGENT
 from .widget import ImporterWidget
 
 
@@ -22,7 +23,7 @@ class AnkiProRequestInterceptor(QWebEngineUrlRequestInterceptor):
     def interceptRequest(self, info: QWebEngineUrlRequestInfo) -> None:
         info.setHttpHeader(
             b"User-Agent",
-            b"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            USER_AGENT.encode(),
         )
 
 

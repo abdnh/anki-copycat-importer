@@ -543,7 +543,7 @@ class AnkiAppImporter(CopycatImporter):
                 self.notetypes[str(self.deck_id)] = notetype
                 for card_el in deck_el.select("card"):
                     fields: dict[str, str] = {}
-                    for field in card_el.select("field"):
+                    for field in card_el.select("*"):
                         fields[
                             notetype.fields.normalize(str(field["name"]))
                         ] = field.decode_contents()

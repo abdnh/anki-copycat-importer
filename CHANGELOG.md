@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.3] - 2024-04-05
+
+### Fixed
+
+-   Fixed AnkiPro login no longer working.
+-   Fixed AnkiApp XML importer adding empty notes.
+
 ## [2.2.2] - 2024-03-18
 
 ### Fixed
@@ -178,6 +185,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
+[2.2.3]: https://github.com/abdnh/anki-copycat-importer/compare/2.2.2...2.2.3
+[2.2.2]: https://github.com/abdnh/anki-copycat-importer/compare/2.2.1...2.2.2
 [2.2.1]: https://github.com/abdnh/anki-copycat-importer/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/abdnh/anki-copycat-importer/compare/2.1.2...2.2.0
 [2.1.2]: https://github.com/abdnh/anki-copycat-importer/compare/2.1.1...2.1.2

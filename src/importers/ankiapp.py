@@ -16,13 +16,13 @@ from typing import TYPE_CHECKING, Any, cast
 
 import ccl_chromium_indexeddb
 import requests
+from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 if TYPE_CHECKING:
     from anki.decks import DeckId
     from anki.models import NotetypeId
     from aqt.main import AnkiQt
-
-from bs4 import BeautifulSoup
 
 from ..appdata import AnkiAppData
 from ..config import config
@@ -543,10 +543,11 @@ class AnkiAppImporter(CopycatImporter):
                 self.notetypes[str(self.deck_id)] = notetype
                 for card_el in deck_el.select("card"):
                     fields: dict[str, str] = {}
-                    for field in card_el.select("*"):
-                        fields[
-                            notetype.fields.normalize(str(field["name"]))
-                        ] = field.decode_contents()
+                    for field_el in card_el.children:
+                        if isinstance(field_el, Tag):
+                            fields[
+                                notetype.fields.normalize(str(field_el["name"]))
+                            ] = field_el.decode_contents()
                     notetype.fields |= fields.keys()
                     card = Card(str(self.deck_id), deck, fields, [])
                     self.cards[str(self.card_id)] = card

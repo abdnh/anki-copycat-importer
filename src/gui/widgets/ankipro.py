@@ -52,7 +52,7 @@ class AnkiProWebPage(QWebEnginePage):
             qconnect(self.newWindowRequested, self.on_new_window_requested)
 
     def on_new_window_requested(self, request: "QWebEngineNewWindowRequest") -> None:
-        dialog = AnkiProLoginDialog(self.mw, self._parent, lambda: None)
+        dialog = AnkiProLoginDialog(self.mw, self._parent, lambda t: None)
         request.openIn(dialog.web.page())
         dialog.open()
 
@@ -77,7 +77,7 @@ class AnkiProLoginDialog(QDialog):
         self,
         mw: AnkiQt,
         parent: QWidget,
-        on_finished: Callable[[], None],
+        on_finished: Callable[[str], None],
     ):
         super().__init__(parent, Qt.WindowType.Window)
         self.mw = mw
@@ -102,11 +102,8 @@ class AnkiProLoginDialog(QDialog):
         base_close = super().closeEvent
 
         def on_token(token: str) -> None:
-            importer_options = config["importer_options"]
-            importer_options["ankipro"]["token"] = token
-            config["importer_options"] = importer_options
             base_close(event)
-            self.on_finished()
+            self.on_finished(token)
 
         def on_login(token: str) -> None:
             if token:
@@ -125,22 +122,23 @@ class AnkiProWidget(ImporterWidget):
         self.form = Ui_Form()
         self.form.setupUi(self)
         qconnect(self.form.login_button.clicked, self.on_login)
-        self._update_login_status()
+        self._update_login_status(self.token)
 
     @property
     def token(self) -> Optional[str]:
         return config.importer_options("ankipro").get("token", None)
 
-    def _update_login_status(self) -> None:
-        if self.token:
+    def _update_login_status(self, token: str) -> None:
+        if token:
             label = "logged in"
             color = "green"
         else:
             label = "not logged in"
             color = "red"
         self.form.login_status.setText(f"Status: <font color='{color}'>{label}</font>")
-        self.form.login_instructions.setVisible(not bool(self.token))
-        if self.token:
+        self.form.login_instructions.setVisible(not bool(token))
+        self.form.token.setText(token)
+        if token:
             self.importer_dialog.import_button.setFocus()
         else:
             self.form.login_button.setFocus()
@@ -154,12 +152,16 @@ class AnkiProWidget(ImporterWidget):
         dialog.exec()
 
     def on_import(self) -> Optional[dict[str, Any]]:
-        if not self.token:
+        token = self.form.token.text() or self.token
+        importer_options = config["importer_options"]
+        importer_options["ankipro"]["token"] = token
+        config["importer_options"] = importer_options
+        if not token:
             showWarning("Not logged in", parent=self, title=consts.name)
             return None
         return {
             "mw": self.importer_dialog.mw,
-            "token": self.token,
+            "token": token,
         }
 
     def on_done(self, imported_count: int) -> bool:

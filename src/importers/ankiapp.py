@@ -316,6 +316,7 @@ class AnkiAppImporter(CopycatImporter):
         )
         self.appdata: AnkiAppData | None = None
         self.indexeddb_reader = IndexedDBReader()
+        db_path: Path
         for path_info in paths:
             if path_info.type == ImportedPathType.DATA_DIR:
                 self.appdata = AnkiAppData(path_info.path)

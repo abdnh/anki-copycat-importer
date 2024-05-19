@@ -1,7 +1,6 @@
 {
     "properties": {
         "importer_options": {
-            "type": "object",
             "properties": {
                 "ankiapp": {
                     "remote_media": {
@@ -9,14 +8,18 @@
                     }
                 },
                 "ankipro": {
-                    "type": "object",
                     "properties": {
                         "token": {
                             "type": "string"
                         }
-                    }
+                    },
+                    "type": "object"
                 }
-            }
+            },
+            "type": "object"
+        },
+        "report_errors": {
+            "type": "boolean"
         }
     },
     "type": "object"

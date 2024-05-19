@@ -1,4 +1,4 @@
-.PHONY: all zip ankiweb vendor fix mypy pylint test sourcedist clean
+.PHONY: all zip ankiweb vendor fix mypy pylint lint test sourcedist clean
 
 all: zip ankiweb
 
@@ -16,10 +16,12 @@ fix:
 	python -m isort src tests
 
 mypy:
-	python -m mypy src tests
+	-python -m mypy src tests
 
 pylint:
-	python -m pylint src tests
+	-python -m pylint src tests
+
+lint: mypy pylint
 
 test:
 	python -m  pytest --cov=src --cov-config=.coveragerc

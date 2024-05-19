@@ -8,6 +8,7 @@ from aqt.qt import QAction, QMenu, qconnect
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
 
+from .errors import setup_error_handler
 from .gui.dialog import ImporterDialog
 from .importers import IMPORTERS, CopycatImporter
 
@@ -26,3 +27,4 @@ for importer_class in IMPORTERS:
     menu.addAction(action)
 
 mw.form.menuTools.addMenu(menu)
+setup_error_handler()

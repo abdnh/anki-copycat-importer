@@ -2,7 +2,7 @@ anki==24.4.1
     # via aqt
 ankiscripts @ git+https://github.com/abdnh/ankiscripts@aa83afa179f1f640efd73e36b29b55eb5408e497
     # via -r requirements/dev.in
-ankiutils @ git+https://github.com/abdnh/ankiutils@e1ce6a2573342cda831ba81fc2c7838a64ce2237
+ankiutils @ git+https://github.com/abdnh/ankiutils@b20b8e88aef900d1b690733fba6554661b6f96cc
     # via -r requirements\bundle.in
 aqt==24.4.1
     # via -r requirements/dev.in

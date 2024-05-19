@@ -1,4 +1,4 @@
-ankiutils @ git+https://github.com/abdnh/ankiutils@e1ce6a2573342cda831ba81fc2c7838a64ce2237
+ankiutils @ git+https://github.com/abdnh/ankiutils@b20b8e88aef900d1b690733fba6554661b6f96cc
 ccl_chrome_indexeddb @ git+https://github.com/abdnh/ccl_chrome_indexeddb@anki
 # Depends on libmagic, which we don't package yet
 python-magic

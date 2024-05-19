@@ -6,5 +6,6 @@
         "ankipro": {
             "token": ""
         }
-    }
+    },
+    "report_errors": true
 }

@@ -1,14 +1,12 @@
-anki==23.12.1
+anki==24.4.1
     # via aqt
-ankiscripts @ git+https://github.com/abdnh/ankiscripts@ed96ad699fe9dd52e6baec92e4619664fe28fd15
-    # via
-    #   -r requirements/dev.in
-    #   ankiscripts
-ankiutils @ git+https://github.com/abdnh/ankiutils@29652295f7e1d2aff55e000a66fbc239de8c6224
-    # via -r requirements\bundle.in
-aqt==23.12.1
+ankiscripts @ git+https://github.com/abdnh/ankiscripts@aa83afa179f1f640efd73e36b29b55eb5408e497
     # via -r requirements/dev.in
-astroid==3.0.3
+ankiutils @ git+https://github.com/abdnh/ankiutils@e1ce6a2573342cda831ba81fc2c7838a64ce2237
+    # via -r requirements\bundle.in
+aqt==24.4.1
+    # via -r requirements/dev.in
+astroid==3.2.1
     # via pylint
 attrs==23.2.0
     # via
@@ -18,16 +16,19 @@ beautifulsoup4==4.12.3
     # via
     #   anki
     #   aqt
-black==24.1.1
+black==24.4.2
     # via -r requirements/dev.in
-blinker==1.7.0
+blinker==1.8.2
     # via flask
-build==1.0.3
+build==1.2.1
     # via pip-tools
 ccl-chrome-indexeddb @ git+https://github.com/abdnh/ccl_chrome_indexeddb@anki
     # via -r requirements\bundle.in
 certifi==2024.2.2
-    # via requests
+    # via
+    #   ankiutils
+    #   requests
+    #   sentry-sdk
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
@@ -43,31 +44,29 @@ colorama==0.4.6
     #   click
     #   pylint
     #   pytest
-coverage==7.4.1
-    # via
-    #   coverage
-    #   pytest-cov
+coverage==7.5.1
+    # via pytest-cov
 decorator==5.1.1
     # via anki
 dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via pytest
-filelock==3.13.1
+filelock==3.14.0
     # via virtualenv
-flask==3.0.2
+flask==3.0.3
     # via
     #   aqt
     #   flask-cors
-flask-cors==4.0.0
+flask-cors==4.0.1
     # via aqt
-identify==2.5.33
+identify==2.5.36
     # via pre-commit
-idna==3.6
+idna==3.7
     # via requests
-importlib-metadata==7.0.1
+importlib-metadata==7.1.0
     # via
     #   build
     #   flask
@@ -78,17 +77,17 @@ isort==5.13.2
     # via
     #   -r requirements/dev.in
     #   pylint
-itsdangerous==2.1.2
+itsdangerous==2.2.0
     # via flask
-jinja2==3.1.3
+jinja2==3.1.4
     # via flask
-jsonschema==4.21.1
+jsonschema==4.22.0
     # via
     #   ankiscripts
     #   aqt
 jsonschema-specifications==2023.12.1
     # via jsonschema
-markdown==3.5.2
+markdown==3.6
     # via anki
 markupsafe==2.1.5
     # via
@@ -96,7 +95,7 @@ markupsafe==2.1.5
     #   werkzeug
 mccabe==0.7.0
     # via pylint
-mypy==1.8.0
+mypy==1.10.0
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via
@@ -104,67 +103,71 @@ mypy-extensions==1.0.0
     #   mypy
 nodeenv==1.8.0
     # via pre-commit
-orjson==3.9.13
+orjson==3.10.3
     # via anki
-packaging==23.2
+packaging==24.0
     # via
     #   black
     #   build
     #   pytest
 pathspec==0.12.1
     # via black
-pip-tools==7.3.0
+pip-system-certs==4.0
+    # via aqt
+pip-tools==7.4.1
     # via -r requirements\base.in
-platformdirs==4.2.0
+platformdirs==4.2.2
     # via
     #   black
     #   pylint
     #   virtualenv
-pluggy==1.4.0
+pluggy==1.5.0
     # via pytest
-pre-commit==3.6.0
+pre-commit==3.7.1
     # via -r requirements/dev.in
 prompt-toolkit==3.0.36
     # via questionary
-protobuf==4.25.2
+protobuf==5.26.1
     # via anki
 psutil==5.9.8 ; sys_platform == "win32"
     # via
     #   -r requirements/dev.in
     #   anki
     #   aqt
-puremagic==1.20
+puremagic==1.23
     # via -r requirements\bundle.in
-pylint==3.0.3
+pylint==3.2.1
     # via -r requirements/dev.in
-pyproject-hooks==1.0.0
-    # via build
-pyqt6==6.6.1
+pyproject-hooks==1.1.0
+    # via
+    #   build
+    #   pip-tools
+pyqt6==6.7.0
     # via
     #   ankiscripts
     #   aqt
     #   pyqt6-webengine
-pyqt6-qt6==6.6.1
+pyqt6-qt6==6.7.0
     # via pyqt6
 pyqt6-sip==13.6.0
     # via
     #   pyqt6
     #   pyqt6-webengine
-pyqt6-webengine==6.6.0
+pyqt6-webengine==6.7.0
     # via aqt
-pyqt6-webengine-qt6==6.6.1
+pyqt6-webengine-qt6==6.7.0
     # via pyqt6-webengine
 pysocks==1.7.1
     # via requests
-pytest==8.0.0
+pytest==8.2.0
     # via
     #   -r requirements/dev.in
     #   pytest-cov
-pytest-cov==4.1.0
+pytest-cov==5.0.0
     # via -r requirements/dev.in
 python-magic==0.4.27
     # via -r requirements\bundle.in
-pyupgrade==3.15.0
+pyupgrade==3.15.2
     # via -r requirements/dev.in
 pywin32==306 ; sys_platform == "win32"
     # via
@@ -174,7 +177,7 @@ pyyaml==6.0.1
     # via pre-commit
 questionary==2.0.1
     # via ankiscripts
-referencing==0.33.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -182,12 +185,14 @@ requests==2.31.0
     # via
     #   anki
     #   aqt
-rpds-py==0.17.1
+rpds-py==0.18.1
     # via
     #   jsonschema
     #   referencing
-send2trash==1.8.2
+send2trash==1.8.3
     # via aqt
+sentry-sdk==1.14.0
+    # via ankiutils
 soupsieve==2.5
     # via beautifulsoup4
 tokenize-rt==5.2.0
@@ -200,43 +205,46 @@ tomli==2.0.1
     #   mypy
     #   pip-tools
     #   pylint
-    #   pyproject-hooks
     #   pytest
-tomlkit==0.12.3
+tomlkit==0.12.5
     # via pylint
-types-beautifulsoup4==4.12.0.20240106
+types-beautifulsoup4==4.12.0.20240511
     # via -r requirements/dev.in
-types-html5lib==1.1.11.20240106
+types-html5lib==1.1.11.20240228
     # via types-beautifulsoup4
-types-requests==2.31.0.20240125
+types-requests==2.31.0.20240406
     # via -r requirements/dev.in
-typing-extensions==4.9.0
+typing-extensions==4.11.0
     # via
     #   astroid
     #   black
     #   mypy
     #   pylint
-urllib3==2.2.0
+urllib3==2.2.1
     # via
+    #   ankiutils
     #   requests
+    #   sentry-sdk
     #   types-requests
-virtualenv==20.25.0
+virtualenv==20.26.2
     # via pre-commit
 waitress==3.0.0
     # via aqt
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.1
+werkzeug==3.0.3
     # via flask
-wheel==0.42.0
+wheel==0.43.0
     # via pip-tools
-zipp==3.17.0
+wrapt==1.16.0
+    # via pip-system-certs
+zipp==3.18.2
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.0
     # via pip-tools
-setuptools==69.0.3
+setuptools==69.5.1
     # via
     #   nodeenv
     #   pip-tools

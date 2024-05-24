@@ -335,7 +335,7 @@ class AnkiAppImporter(CopycatImporter):
                 db_path = path_info.path
             if path_info.type != ImportedPathType.XML_ZIP:
                 self.con = sqlite3.connect(db_path)
-                self.mw.progress.update(
+                self._update_progress(
                     label="Extracting collection from AnkiApp database...",
                 )
                 self._extract_notetypes()

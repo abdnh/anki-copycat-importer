@@ -6,11 +6,14 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import getFile, showWarning
 
-from ...appdata import get_ankiapp_data_folder
 from ...config import config
 from ...consts import consts
 from ...forms.ankiapp import Ui_Form
-from ...importers.ankiapp import ImportedPathInfo, ImportedPathType
+from ...importers.ankiapp import (
+    ImportedPathInfo,
+    ImportedPathType,
+    get_ankiapp_data_folder,
+)
 from .widget import ImporterWidget
 
 

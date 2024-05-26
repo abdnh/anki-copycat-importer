@@ -338,12 +338,24 @@ class AnkiAppImporter(CopycatImporter):
                 self._update_progress(
                     label="Extracting collection from AnkiApp database...",
                 )
-                self._extract_notetypes()
-                self._extract_decks()
-                self._extract_media()
-                self._extract_cards()
+                if self._table_exists("layouts"):
+                    self._extract_notetypes()
+                if self._table_exists("decks"):
+                    self._extract_decks()
+                if self._table_exists("knol_blobs"):
+                    self._extract_media()
+                if self._table_exists("cards"):
+                    self._extract_cards()
             else:
                 self._extract_xml_zip(path_info.path)
+
+    def _table_exists(self, name: str) -> bool:
+        return bool(
+            self.con.execute(
+                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?",
+                (name,),
+            ).fetchone()[0]
+        )
 
     def _cancel_if_needed(self) -> None:
         if self.mw.progress.want_cancel():

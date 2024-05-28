@@ -10,11 +10,9 @@ if TYPE_CHECKING:
     from aqt.main import AnkiQt
 
 from ..log import logger
-from .errors import CopycatImporterError
+from .httpclient import HttpClient
 from .importer import CopycatImporter
 from .utils import fname_to_link, guess_extension
-
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
 
 
 @dataclass
@@ -75,34 +73,19 @@ ankipro_notetypes = [
 # pylint: disable=too-few-public-methods
 class AnkiProImporter(CopycatImporter):
     name = "AnkiPro"
-    ENDPOINT = "https://api.ankipro.net/api"
-    TIMEOUT = 60
 
     def __init__(self, mw: "AnkiQt", token: str):
         super().__init__()
         self.mw = mw
-        self.http_session = requests.Session()
+        self.http_client = HttpClient()
         self.token = token
 
     def _get(self, url: str, *args: Any, **kwrags: Any) -> requests.Response:
-        headers = {"User-Agent": USER_AGENT}
-        headers.update(kwrags.pop("headers", {}))
-        try:
-            res = self.http_session.get(
-                url,
-                timeout=self.TIMEOUT,
-                *args,
-                headers=headers,
-                **kwrags,
-            )
-            res.raise_for_status()
-            return res
-        except requests.HTTPError as exc:
-            raise CopycatImporterError(f"Request to {url} failed: {str(exc)}") from exc
+        return self.http_client.request("GET", url, *args, **kwrags)
 
     def _api_get(self, path: str, *args: Any, **kwrags: Any) -> requests.Response:
         return self._get(
-            f"{self.ENDPOINT}/{path}",
+            f"https://api.ankipro.net/api/{path}",
             headers={"Authorization": f"Bearer {self.token}"},
             *args,
             **kwrags,

@@ -2,119 +2,37 @@ from typing import Any, Optional
 
 from aqt.main import AnkiQt
 from aqt.qt import *
+from aqt.qt import Callable, QWidget
 from aqt.utils import showWarning
-from aqt.webview import QWebEnginePage, QWebEngineProfile, QWebEngineUrlRequestInfo
-
-if qtmajor > 5:
-    from PyQt6.QtNetwork import QNetworkCookie
-else:
-    from PyQt5.QtNetwork import (  # type: ignore # pylint: disable=import-error
-        QNetworkCookie,
-    )
 
 from ...config import config
 from ...consts import consts
 from ...forms.ankipro import Ui_Form
-from ...importers.ankipro import USER_AGENT
+from ..web import WebDialog
 from .widget import ImporterWidget
 
 
-class AnkiProRequestInterceptor(QWebEngineUrlRequestInterceptor):
-    def interceptRequest(self, info: QWebEngineUrlRequestInfo) -> None:
-        info.setHttpHeader(
-            b"User-Agent",
-            USER_AGENT.encode(),
+class AnkiProLoginDialog(WebDialog):
+    def __init__(self, mw: AnkiQt, parent: QWidget, on_result: Callable[[str], None]):
+        super().__init__(
+            mw, parent, "https://ankipro.net/", "Login to AnkiPro", on_result
         )
 
-
-class AnkiProProfile(QWebEngineProfile):
-    def __init__(self, parent: Optional[QObject] = None) -> None:
-        super().__init__("copycat_importer", parent)
-        self.token = ""
-        self.setUrlRequestInterceptor(AnkiProRequestInterceptor(self))
-        qconnect(self.cookieStore().cookieAdded, self.on_cookie_added)
-
-    def on_cookie_added(self, cookie: QNetworkCookie) -> None:
-        if cookie.name().data().decode() == "AnkiProToken":
-            self.token = cookie.value().data().decode()
-
-
-web_profile = AnkiProProfile()
-
-
-class AnkiProWebPage(QWebEnginePage):
-    def __init__(self, mw: AnkiQt, parent: QWidget) -> None:
-        super().__init__(web_profile, parent)
-        self.mw = mw
-        self._parent = parent
-        # FIXME: Qt5
-        if qtmajor >= 6:
-            qconnect(self.newWindowRequested, self.on_new_window_requested)
-
-    def on_new_window_requested(self, request: "QWebEngineNewWindowRequest") -> None:
-        dialog = AnkiProLoginDialog(self.mw, self._parent, lambda t: None)
-        request.openIn(dialog.web.page())
-        dialog.open()
-
-
-class AnkiProWebview(QWebEngineView):
-    def __init__(self, mw: AnkiQt, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent=parent)
-        self.mw = mw
-        self._parent = parent
-        self._page = AnkiProWebPage(mw, self)
-        qconnect(self._page.windowCloseRequested, self.on_close_requested)
-        self.setPage(self._page)
-
-    def on_close_requested(self) -> None:
-        self._parent.close()
-
-
-class AnkiProLoginDialog(QDialog):
-    URL = "https://ankipro.net/"
-
-    def __init__(
-        self,
-        mw: AnkiQt,
-        parent: QWidget,
-        on_finished: Callable[[str], None],
-    ):
-        super().__init__(parent, Qt.WindowType.Window)
-        self.mw = mw
-        self.on_finished = on_finished
-        self.setWindowTitle(f"{consts.name} - AnkiPro Login")
-        self.setWindowState(self.windowState() | Qt.WindowState.WindowMaximized)
-        vbox = QVBoxLayout()
-        self.web = AnkiProWebview(self.mw, self)
-        vbox.addWidget(self.web)
-        self.web.settings().setAttribute(
-            QWebEngineSettings.WebAttribute.AllowRunningInsecureContent,
-            True,
+    def get_result(self, on_done: Callable[[str], None]) -> None:
+        self.web.page().runJavaScript(
+            """
+(() => {
+    let token = document.cookie.split("; ").find((row) => row.startsWith("AnkiProToken="))?.split("=")[1];
+    if(!token) {
+          token = localStorage.getItem("AnkiProToken");
+    }
+    return token;
+})();
+""",
+            on_done,
         )
-        self.web.settings().setAttribute(
-            QWebEngineSettings.WebAttribute.JavascriptCanOpenWindows,
-            True,
-        )
-        self.web.setUrl(QUrl(self.URL))
-        self.setLayout(vbox)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
-        base_close = super().closeEvent
-
-        def on_token(token: str) -> None:
-            base_close(event)
-            self.on_finished(token)
-
-        def on_login(token: str) -> None:
-            if token:
-                on_token(token)
-
-        if web_profile.token:
-            on_token(web_profile.token)
-        else:
-            self.web.page().runJavaScript(
-                'localStorage.getItem("AnkiProToken");', on_login
-            )
+        return super().get_result(on_done)
 
 
 class AnkiProWidget(ImporterWidget):
@@ -147,7 +65,7 @@ class AnkiProWidget(ImporterWidget):
         dialog = AnkiProLoginDialog(
             self.importer_dialog.mw,
             self.importer_dialog.mw,
-            on_finished=self._update_login_status,
+            on_result=self._update_login_status,
         )
         dialog.exec()
 

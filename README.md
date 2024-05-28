@@ -6,39 +6,11 @@ An [Anki](https://apps.ankiweb.net/) add-on to import decks from copycat apps su
 
 ![AnkiApp Importer](images/ankiapp.png)
 
-Go to _Tools > Copycat Importer > Import from AnkiApp_.
-
-Several methods to import AnkiApp decks are supported. All methods generally support importing cards, decks, note types, and media files:
-
-### Data folder
-
-If you have AnkiApp installed on your computer, it's recommended to try this option first. The add-on tries to detect the location of your AnkiApp data and fill in the Data folder field with its path. You need to make sure all your AnkiApp decks are downloaded locally before using this option. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.
-
-### Database files
-
-If you only have SQLite database files instead of a full data folder (such as the files stored in the databases subfolder of the data folder), you can use this option.
-This is only recommened if you don't have access to the whole data folder for some reason, as the add-on may need other files in the data folder to properly import notetypes.
-
-### XML zips
-
-If the Export button under the three-dot menu in AnkiApp is enabled for your account, you can use it to export a zip file and use this option to import the deck.
-
-<img alt="AnkiApp's Export button" src="images/ankiapp-export.png" width="600">
-
-If the button is greyed out, add the following code as a bookmark to your web browser, then click on it while on the deck page to activate the button:
-
-```
-javascript:void(document.querySelector("#hover-triggerExport").removeAttribute("disabled"))
-```
-
-See [this](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo) for another workaround.
+The add-on works by downloading your decks from the AnkiPro site. Go to _Tools > Copycat Importer > Import from AnkiApp_ and follow the instructions.
 
 ### Known Issues
 
 -   Study progress is not imported.
--   AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause
-    Anki to refuse to import its note if it happened to be imported as the first field.
-    To prevent that, the add-on fills all empty fields with a non-breaking space.
 
 ## AnkiPro
 

@@ -3,36 +3,12 @@
 <b>AnkiApp</b>
 
 <p><img src="https://raw.githubusercontent.com/abdnh/anki-copycat-importer/master/images/ankiapp.png" alt="AnkiApp Importer"></p>
-<p>Go to <i>Tools &gt; Copycat Importer &gt; Import from AnkiApp</i>.</p>
-<p>Several methods to import AnkiApp decks are supported. All methods generally support importing cards, decks, note types, and media files:</p>
-
-<b>Data folder</b>
-
-<p>If you have AnkiApp installed on your computer, it's recommended to try this option first. The add-on tries to detect the location of your AnkiApp data and fill in the Data folder field with its path. You need to make sure all your AnkiApp decks are downloaded locally before using this option. For that, go to AnkiApp, click on each of your decks, then click on the Download button at the bottom if it's shown.</p>
-
-<b>Database files</b>
-
-<p>If you only have SQLite database files instead of a full data folder (such as the files stored in the databases subfolder of the data folder), you can use this option.
-This is only recommened if you don't have access to the whole data folder for some reason, as the add-on may need other files in the data folder to properly import notetypes.</p>
-
-<b>XML zips</b>
-
-<p>If the Export button under the three-dot menu in AnkiApp is enabled for your account, you can use it to export a zip file and use this option to import the deck.</p>
-<img alt="AnkiApp's Export button" src="https://raw.githubusercontent.com/abdnh/anki-copycat-importer/master/images/ankiapp-export.png" width="600">
-
-<p>If the button is greyed out, add the following code as a bookmark to your web browser, then click on it while on the deck page to activate the button:</p>
-<code>javascript:void(document.querySelector("#hover-triggerExport").removeAttribute("disabled"))
-</code>
-
-<p>See <a href="https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/214?u=abdo">this</a> for another workaround.</p>
+<p>The add-on works by downloading your decks from the AnkiPro site. Go to <i>Tools &gt; Copycat Importer &gt; Import from AnkiApp</i> and follow the instructions.</p>
 
 <b>Known Issues</b>
 
 <ul>
 <li>Study progress is not imported.</li>
-<li>AnkiApp doesn't seem to keep any info on the positions of note type fields, so an empty field will cause
-Anki to refuse to import its note if it happened to be imported as the first field.
-To prevent that, the add-on fills all empty fields with a non-breaking space.</li>
 </ul>
 
 <b>AnkiPro</b>

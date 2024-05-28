@@ -20,138 +20,38 @@
    <string>AnkiApp</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <item row="1" column="0">
-    <widget class="QCheckBox" name="remote_media">
+   <item row="0" column="1">
+    <widget class="QLabel" name="login_status">
      <property name="text">
-      <string>Try to download missing media from AnkiApp servers</string>
+      <string>Status: not logged in</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="1" column="1">
+    <widget class="QLabel" name="login_instructions">
+     <property name="text">
+      <string>Click the button below to open web.ankiapp.com, then close the page once you log in to your account.</string>
      </property>
-     <property name="title">
-      <string/>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
-     <layout class="QFormLayout" name="formLayout_2">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="data_folder_checkbox">
-        <property name="toolTip">
-         <string>AnkiApp data folder</string>
-        </property>
-        <property name="text">
-         <string>Data folder</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLineEdit" name="data_folder">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="choose_data_folder">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0">
-       <widget class="QRadioButton" name="database_file_checkbox">
-        <property name="toolTip">
-         <string>AnkiApp's SQLite database file. If you only have access to a single database file, you can use this, otherwise it's recommended to specify the data folder instead to allow the add-on to import more data</string>
-        </property>
-        <property name="text">
-         <string>Database files</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLineEdit" name="database_file">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="choose_database_file">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLineEdit" name="xml_zip">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="choose_xml_zip">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0">
-       <widget class="QRadioButton" name="xml_zip_checkbox">
-        <property name="text">
-         <string>XML zips</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QPushButton" name="login_button">
+     <property name="text">
+      <string>Open web.ankiapp.com</string>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>data_folder_checkbox</tabstop>
-  <tabstop>data_folder</tabstop>
-  <tabstop>choose_data_folder</tabstop>
-  <tabstop>database_file_checkbox</tabstop>
-  <tabstop>database_file</tabstop>
-  <tabstop>choose_database_file</tabstop>
-  <tabstop>xml_zip_checkbox</tabstop>
-  <tabstop>xml_zip</tabstop>
-  <tabstop>choose_xml_zip</tabstop>
-  <tabstop>remote_media</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>

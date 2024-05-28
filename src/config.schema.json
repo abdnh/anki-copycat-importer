@@ -3,8 +3,14 @@
         "importer_options": {
             "properties": {
                 "ankiapp": {
-                    "remote_media": {
-                        "type": "boolean"
+                    "client_id": {
+                        "type": "string"
+                    },
+                    "client_token": {
+                        "type": "string"
+                    },
+                    "client_version": {
+                        "type": "string"
                     }
                 },
                 "ankipro": {

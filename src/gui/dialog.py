@@ -13,6 +13,8 @@ from .widgets import IMPORTER_WIDGETS
 
 
 class ImporterDialog(ankiutils.gui.dialog.Dialog):
+    default_size = (750, 300)
+
     def __init__(
         self,
         mw: AnkiQt,

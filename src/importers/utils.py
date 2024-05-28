@@ -35,17 +35,3 @@ def guess_extension(mime: str) -> Optional[str]:
             return None
 
     return ext
-
-
-def guess_mime(data: bytes) -> str:
-    from_buffer = None
-    try:
-        import magic
-
-        from_buffer = magic.from_buffer
-    except ImportError:
-        import puremagic
-
-        from_buffer = puremagic.from_string
-
-    return from_buffer(data, mime=True)

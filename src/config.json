@@ -1,7 +1,9 @@
 {
     "importer_options": {
         "ankiapp": {
-            "remote_media": true
+            "client_id": "",
+            "client_token": "",
+            "client_version": ""
         },
         "ankipro": {
             "token": ""

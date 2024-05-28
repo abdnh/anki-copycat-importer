@@ -1,11 +1,11 @@
 ## General
 
--- `report_errors`: Report add-on errors automatically.
+-   `report_errors`: Report add-on errors automatically.
 
 ## AnkiApp
 
--   `remote_media`: Whether to try to download missing media from AnkiApp's servers. You can disable this for faster importing.
+-   `client_id`, `client_token`, `client_version`: Used to save your login status. You don't need to set these manually.
 
 ## AnkiPro
 
--   `token`: This is used to save your login status.
+-   `token`: Used to save your login status. You don't need to set this manually.

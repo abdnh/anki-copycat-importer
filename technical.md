@@ -1,5 +1,7 @@
 Some incomplete notes about AnkiApp's internals.
 
+_Note: The add-on no longer imports from the SQLite database as of version 3.0.0_
+
 ## Terminology
 
 AnkiApp's uses familiar terms like decks, cards, and tags, with some differences:

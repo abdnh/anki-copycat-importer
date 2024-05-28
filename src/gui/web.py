@@ -46,8 +46,6 @@ class Webview(QWebEngineView):
 
 
 class WebDialog(ankiutils.gui.dialog.Dialog):
-    default_size = (800, 800)
-
     def __init__(
         self,
         mw: AnkiQt,

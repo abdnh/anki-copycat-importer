@@ -205,7 +205,7 @@ class AnkiAppImporter(CopycatImporter):
 
     def _api_get(self, path: str) -> requests.Response:
         response = self._get_request(f"https://api.ankiapp.com/{path}")
-        if "DEBUG" in os.environ:
+        if os.environ.get("DEBUG"):
             from ..consts import consts
 
             tmp_dir = consts.dir / "tmp" / "requests"

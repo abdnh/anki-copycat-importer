@@ -56,11 +56,11 @@ class WebDialog(ankiutils.gui.dialog.Dialog):
         title: str,
         on_result: Callable[[Any], None],
     ):
-        super().__init__(__name__, parent, Qt.WindowType.Window)
         self.mw = mw
         self.url = url
         self.title = title
         self._on_result = on_result
+        super().__init__(__name__, parent, Qt.WindowType.Window)
 
     def setup_ui(self) -> None:
         self.setWindowTitle(f"{consts.name} - {self.title}")

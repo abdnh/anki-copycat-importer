@@ -88,8 +88,21 @@ class AnkiAppNoteType:
         self.name = name
         self.fields = fields
         self.style = style
-        self.front = front
-        self.back = back
+        self.front = self._fix_field_refs(front)
+        self.back = self._fix_field_refs(back)
+
+    ANKIAPP_FIELD_REF_RE = re.compile(r"\{\{\[(#|/|^)?(.*?)\]\}\}")
+
+    def _fix_field_refs(self, template: str) -> str:
+        """Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`"""
+
+        def repl(m: Match[str]) -> str:
+            field = self.fields.get(m.group(2))
+            if not field:
+                field = m.group(2)
+            return "{{{{{}{}}}}}".format(m.group(1) or "", field)
+
+        return self.ANKIAPP_FIELD_REF_RE.sub(repl, template)
 
     def __repr__(self) -> str:
         return f"NoteType({self.name=}, {self.fields=}, {self.front=}, {self.back=})"

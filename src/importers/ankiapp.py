@@ -417,9 +417,11 @@ class AnkiAppImporter(CopycatImporter):
                 self.media[media_obj.ID] = media_obj
         if media_obj and media_obj.filename:
             return fname_to_link(media_obj.filename)
-        self.warnings.append(f"Missing media file: {blob_id}")
-        # dummy image ref
-        return f'<img src="{blob_id}.jpg"></img>'
+        if not (blob_id.startswith("https://") or blob_id.startswith("http://")):
+            self.warnings.append(f"Missing media file: {blob_id}")
+            # dummy image ref
+            return f'<img src="{blob_id}.jpg"></img>'
+        return match.group(0)
 
     def do_import(self) -> int:
         self._import_decks()

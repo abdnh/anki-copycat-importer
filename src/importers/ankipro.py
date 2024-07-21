@@ -202,7 +202,9 @@ class AnkiProImporter(CopycatImporter):
                         media_ids = media_side_map.get(side, [])
                         if media_ids:
                             contents += "<br>".join(
-                                media_refs_map[id] for id in media_ids
+                                media_refs_map[id]
+                                for id in media_ids
+                                if id in media_refs_map
                             )
                         contents += note_dict["fields"][side]
                         note.fields[i] = contents

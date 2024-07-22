@@ -403,7 +403,7 @@ class AnkiAppImporter(CopycatImporter):
         return True
 
     def _repl_blob_ref(self, match: Match[str]) -> str:
-        blob_id = match.group("fname")
+        blob_id = match.group("fname").partition(".")[0]
         media_obj = None
         if blob_id in self.media:
             media_obj = self.media[blob_id]

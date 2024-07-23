@@ -9,5 +9,6 @@
             "token": ""
         }
     },
-    "report_errors": true
+    "report_errors": true,
+    "download_media": true
 }

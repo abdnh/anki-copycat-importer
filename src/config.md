@@ -1,5 +1,6 @@
 ## General
 
+-   `download_media`: Download media files.
 -   `report_errors`: Report add-on errors automatically.
 
 ## AnkiApp

@@ -9,6 +9,7 @@ from anki.models import NotetypeDict, NotetypeId
 if TYPE_CHECKING:
     from aqt.main import AnkiQt
 
+from ..config import config
 from ..log import logger
 from .httpclient import HttpClient
 from .importer import CopycatImporter
@@ -92,6 +93,8 @@ class AnkiProImporter(CopycatImporter):
         )
 
     def _get_media(self, url: str) -> Optional[tuple[str, bytes]]:
+        if not config["download_media"]:
+            return None
         res = self._get(url)
         mime = res.headers.get("content-type", None)
         if not mime:

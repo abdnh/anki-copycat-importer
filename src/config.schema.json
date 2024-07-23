@@ -1,5 +1,8 @@
 {
     "properties": {
+        "download_media": {
+            "type": "boolean"
+        },
         "importer_options": {
             "properties": {
                 "ankiapp": {

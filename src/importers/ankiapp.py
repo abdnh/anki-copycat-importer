@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from anki.models import NotetypeId
     from aqt.main import AnkiQt
 
+from ..config import config
 from ..log import logger
 from .errors import CopycatImporterCanceled
 from .httpclient import HttpClient
@@ -236,6 +237,8 @@ class AnkiAppImporter(CopycatImporter):
         return response
 
     def _get_media(self, blob_id: str) -> AnkiAppMedia | None:
+        if not config["download_media"]:
+            return None
         try:
             response = self._get_request(f"https://blobs.ankiapp.com/{blob_id}")
             data = response.content

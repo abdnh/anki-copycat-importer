@@ -90,6 +90,7 @@ class AnkiAppNoteType:
         self.style = style
         self.front = self._fix_field_refs(front)
         self.back = self._fix_field_refs(back)
+        self._replace_special_fields()
 
     ANKIAPP_FIELD_REF_RE = re.compile(r"\{\{\[(#|/|^)?(.*?)\]\}\}")
 
@@ -103,6 +104,10 @@ class AnkiAppNoteType:
             return "{{{{{}{}}}}}".format(m.group(1) or "", field)
 
         return self.ANKIAPP_FIELD_REF_RE.sub(repl, template)
+
+    def _replace_special_fields(self) -> None:
+        """Replace AnkiApp's special `{{BackSide}}` reference in front template."""
+        self.front = self.front.replace("{{BackSide}}", self.back)
 
     def __repr__(self) -> str:
         return f"NoteType({self.name=}, {self.fields=}, {self.front=}, {self.back=})"

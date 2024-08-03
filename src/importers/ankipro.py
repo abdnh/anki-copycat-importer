@@ -164,6 +164,8 @@ class AnkiProImporter(CopycatImporter):
                 note_dicts = res.json()
                 if not note_dicts:
                     break
+                if note_dicts[-1]["id"] == last_fetched_card_id:
+                    break
                 if not isinstance(note_dicts, list):
                     logger.warning(
                         "got unexpected response while fetching notes of deck %d: %s",

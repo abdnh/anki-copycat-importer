@@ -149,22 +149,19 @@ class AnkiProImporter(CopycatImporter):
     def _import_cards(self) -> int:
         count = 0
         for deck in self.decks:
-            last_fetched_card_id = None
+            # last_fetched_card_id = None
             while True:
                 params = {
                     "deck_id": deck.id,
                     "limit": 20,
+                    "offset": count,
                 }
-                if last_fetched_card_id is not None:
-                    params["after"] = last_fetched_card_id
                 res = self._api_get(
                     "notes",
                     params=params,
                 )
                 note_dicts = res.json()
                 if not note_dicts:
-                    break
-                if note_dicts[-1]["id"] == last_fetched_card_id:
                     break
                 if not isinstance(note_dicts, list):
                     logger.warning(
@@ -215,7 +212,6 @@ class AnkiProImporter(CopycatImporter):
                         note.fields[i] = contents
                     self.mw.col.add_note(note, deck.anki_id)
                     count += 1
-                last_fetched_card_id = note_dicts[-1]["id"]
 
         return count
 

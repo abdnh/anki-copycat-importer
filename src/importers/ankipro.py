@@ -180,7 +180,7 @@ class AnkiProImporter(CopycatImporter):
                     media_urls_map: dict[str, str] = note_dict.get(
                         "fieldAttachmentUrls", {}
                     )
-                    media_side_map: dict[str, list[str]] = note_dict.get(
+                    media_side_map: dict[str, Any] = note_dict.get(
                         "fieldAttachmentsMap", {}
                     )
                     media_refs_map = {}
@@ -197,11 +197,14 @@ class AnkiProImporter(CopycatImporter):
                         else:
                             filename = f"{id}{ext}"
                             filename = self.mw.col.media.write_data(filename, data)
-                            media_refs_map[id] = fname_to_link(filename)
+                            media_refs_map[int(id)] = fname_to_link(filename)
 
                     for i, side in enumerate(("front_side", "back_side")):
                         contents = ""
-                        media_ids = media_side_map.get(side, [])
+                        media_ids = [
+                            t["id"] if isinstance(t, dict) else t
+                            for t in media_side_map.get(side, [])
+                        ]
                         if media_ids:
                             contents += "<br>".join(
                                 media_refs_map[id]

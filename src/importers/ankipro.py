@@ -108,9 +108,8 @@ class AnkiProImporter(CopycatImporter):
         data = res.json()
         decks: dict[str, AnkiProDeck] = {}
         for deck_dict in data.get("decks", []):
-            if not deck_dict.get("clonedFromLibrary", False):
-                deck = AnkiProDeck(deck_dict["id"], DeckId(1), deck_dict["name"])
-                decks[deck.id] = deck
+            deck = AnkiProDeck(deck_dict["id"], DeckId(1), deck_dict["name"])
+            decks[deck.id] = deck
 
         def rewrite_deck_names(deck_list: list[dict], parent: str = "") -> None:
             for deck_dict in deck_list:

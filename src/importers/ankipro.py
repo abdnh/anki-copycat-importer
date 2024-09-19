@@ -148,12 +148,12 @@ class AnkiProImporter(CopycatImporter):
     def _import_cards(self) -> int:
         count = 0
         for deck in self.decks:
-            # last_fetched_card_id = None
+            offset = 0
             while True:
                 params = {
                     "deck_id": deck.id,
                     "limit": 20,
-                    "offset": count,
+                    "offset": offset,
                 }
                 res = self._api_get(
                     "notes",
@@ -214,6 +214,7 @@ class AnkiProImporter(CopycatImporter):
                         note.fields[i] = contents
                     self.mw.col.add_note(note, deck.anki_id)
                     count += 1
+                    offset += 1
 
         return count
 

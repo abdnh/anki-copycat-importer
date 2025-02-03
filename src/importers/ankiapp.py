@@ -149,7 +149,9 @@ class FallbackNotetype(AnkiAppNoteType):
             self.FRONT,
             self.BACK,
         )
-        self.fields |= extra_fields
+        for field in extra_fields:
+            if field not in self.fields:
+                self.fields.add(field)
 
 
 @dataclasses.dataclass

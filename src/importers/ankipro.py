@@ -3,11 +3,14 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, Any, Optional
 
 import requests
+from anki.consts import MODEL_CLOZE
 from anki.decks import DeckId
 from anki.models import NotetypeDict, NotetypeId
 
 if TYPE_CHECKING:
     from aqt.main import AnkiQt
+
+from enum import Enum
 
 from ..config import config
 from ..log import logger
@@ -23,11 +26,18 @@ class AnkiProDeck:
     name: str
 
 
+class AnkiProNotetypeKind(Enum):
+    BASIC = 0
+    REVERSED = 1
+    CLOZE = 2
+
+
 @dataclass
 class AnkiProNotetype:
     name: str
     templates: list[tuple[str, str]]
     css: str
+    is_cloze: bool = False
 
 
 basic_template = (
@@ -61,14 +71,44 @@ basic_css = """.card {
 }
 """
 
-ankipro_notetypes = [
-    AnkiProNotetype("AnkiPro Basic", [basic_template], basic_css),
-    AnkiProNotetype(
+cloze_template = (
+    "{{cloze:Front}}",
+    """{{cloze:Front}}<br>
+{{Back}}""",
+)
+
+cloze_css = """.card {
+    font-family: arial;
+    font-size: 20px;
+    text-align: center;
+    color: black;
+    background-color: white;
+}
+.cloze {
+    font-weight: bold;
+    color: blue;
+}
+.nightMode .cloze {
+    color: lightblue;
+}
+"""
+
+ankipro_notetypes = {
+    AnkiProNotetypeKind.BASIC: AnkiProNotetype(
+        "AnkiPro Basic", [basic_template], basic_css
+    ),
+    AnkiProNotetypeKind.REVERSED: AnkiProNotetype(
         "AnkiPro Basic (and reversed card)",
         [basic_template, reversed_template],
         basic_css,
     ),
-]
+    AnkiProNotetypeKind.CLOZE: AnkiProNotetype(
+        "AnkiPro Cloze",
+        [cloze_template],
+        cloze_css,
+        is_cloze=True,
+    ),
+}
 
 
 # pylint: disable=too-few-public-methods
@@ -129,10 +169,12 @@ class AnkiProImporter(CopycatImporter):
         self.decks = list(decks.values())
 
     def _import_notetypes(self) -> None:
-        self.notetypes: list[NotetypeDict] = []
-        for ankipro_notetype in ankipro_notetypes:
+        self.notetypes: dict[AnkiProNotetypeKind, NotetypeDict] = {}
+        for kind, ankipro_notetype in ankipro_notetypes.items():
             notetype = self.mw.col.models.new(ankipro_notetype.name)
             notetype["css"] = ankipro_notetype.css
+            if ankipro_notetype.is_cloze:
+                notetype["type"] = MODEL_CLOZE
             for n, (front, back) in enumerate(ankipro_notetype.templates, start=1):
                 template = self.mw.col.models.new_template(f"Card {n}")
                 template["qfmt"] = front
@@ -142,7 +184,7 @@ class AnkiProImporter(CopycatImporter):
                 field = self.mw.col.models.new_field(field_name)
                 self.mw.col.models.add_field(notetype, field)
             changes = self.mw.col.models.add_dict(notetype)
-            self.notetypes.append(self.mw.col.models.get(NotetypeId(changes.id)))
+            self.notetypes[kind] = self.mw.col.models.get(NotetypeId(changes.id))
 
     # pylint: disable=too-many-locals,too-many-branches
     def _import_cards(self) -> int:
@@ -171,10 +213,13 @@ class AnkiProImporter(CopycatImporter):
                     break
                 for note_dict in note_dicts:
                     label = note_dict.get("label", {})
-                    if label.get("type", "") == "reversed":
-                        notetype = self.notetypes[1]
+                    nt_type = label.get("type", "")
+                    if nt_type == "reversed":
+                        notetype = self.notetypes[AnkiProNotetypeKind.REVERSED]
+                    elif nt_type == "cloze":
+                        notetype = self.notetypes[AnkiProNotetypeKind.CLOZE]
                     else:
-                        notetype = self.notetypes[0]
+                        notetype = self.notetypes[AnkiProNotetypeKind.BASIC]
                     note = self.mw.col.new_note(notetype)
                     media_urls_map: dict[str, str] = note_dict.get(
                         "fieldAttachmentUrls", {}

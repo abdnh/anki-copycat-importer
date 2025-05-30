@@ -380,7 +380,7 @@ class AnkiAppImporter(CopycatImporter):
             assert card.deck.did is not None
             self.mw.col.add_note(note, card.deck.did)
             notes_count += 1
-            if time.time() - last_progress >= 0.1:  # noqa: PLR2004
+            if time.time() - last_progress >= 0.1:
                 self._update_progress(
                     label=f"Imported {notes_count} out of {len(self.cards)} cards",
                     value=notes_count,

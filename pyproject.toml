@@ -68,4 +68,4 @@ exclude = [
 [tool.ruff.lint]
 extend-select = ["I", "UP", "PL"]
 
-ignore = ["PLW0603"]
+ignore = ["PLW0603", "PLR2004"]

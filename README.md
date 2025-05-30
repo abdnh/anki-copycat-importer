@@ -21,6 +21,7 @@ The add-on works by downloading your decks from the AnkiPro site. Go to _Tools >
 ### Known Issues
 
 - Importing of study progress and deck options is not supported yet.
+- Importing of image occlusion cards is not supported.
 - AnkiPro is [trying](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/345) to [prevent](https://forums.ankiweb.net/t/copycat-importer/43883) people from exporting their decks using this add-on. You can use [this Chrome extension](https://chromewebstore.google.com/detail/ghmmlnlfpghgbecgkiananhlbfakmcpd) to get your login token then paste it in the text field if you're having trouble logging in via the add-on.
 
 ## Download

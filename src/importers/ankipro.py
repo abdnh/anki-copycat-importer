@@ -26,6 +26,7 @@ class AnkiProDeck:
     id: str
     anki_id: DeckId
     name: str
+    card_count: int
 
 
 class AnkiProNotetypeKind(Enum):
@@ -157,7 +158,12 @@ class AnkiProImporter(CopycatImporter):
         data = res.json()
         decks: dict[str, AnkiProDeck] = {}
         for deck_dict in data.get("decks", []):
-            deck = AnkiProDeck(deck_dict["id"], DeckId(1), deck_dict["name"])
+            deck = AnkiProDeck(
+                deck_dict["id"],
+                DeckId(1),
+                deck_dict["name"],
+                deck_dict["totalCardsCount"],
+            )
             decks[deck.id] = deck
 
         def rewrite_deck_names(deck_list: list[dict], parent: str = "") -> None:
@@ -195,76 +201,92 @@ class AnkiProImporter(CopycatImporter):
             changes = self.mw.col.models.add_dict(notetype)
             self.notetypes[kind] = self.mw.col.models.get(NotetypeId(changes.id))
 
+    def _process_tts_map(self, side: str, tts_map: dict[str, Any]) -> str:
+        tts_list = []
+        for tts in tts_map[side]:
+            lang_parts = tts["language"].split("-")
+            lang_parts[0] = lang_parts[0].lower()
+            if len(lang_parts) == 2:
+                lang_parts[1] = lang_parts[1].upper()
+            lang = "_".join(lang_parts)
+            tts_list.append(f"[anki:tts lang={lang}]{tts['text']}[/anki:tts]")
+        return "".join(tts_list)
+
     def _import_cards(self) -> int:
+        limit = 20
         count = 0
         for deck in self.decks:
             offset = 0
-            while True:
+            while offset < deck.card_count:
                 params = {
                     "deck_id": deck.id,
-                    "limit": 20,
+                    "limit": limit,
                     "offset": offset,
                 }
                 res = self._api_get(
-                    "notes",
+                    "v2/learning/cards",
                     params=params,
                 )
-                note_dicts = res.json()
+                note_dicts = res.json()["cards"]
                 if not note_dicts:
                     break
-                if not isinstance(note_dicts, list):
-                    logger.warning(
-                        "got unexpected response while fetching notes of deck %d: %s",
-                        deck.id,
-                        note_dicts,
-                    )
-                    break
-                for note_dict in note_dicts:
-                    label = note_dict.get("label", {})
-                    notetype = self.notetypes[
-                        AnkiProNotetypeKind.type_for_string(label.get("type", ""))
-                    ]
-                    note = self.mw.col.new_note(notetype)
-                    media_urls_map: dict[str, str] = note_dict.get(
-                        "fieldAttachmentUrls", {}
-                    )
-                    media_side_map: dict[str, Any] = note_dict.get(
-                        "fieldAttachmentsMap", {}
-                    )
-                    media_refs_map = {}
-                    for id, url in media_urls_map.items():
-                        media_info = self._get_media(url)
-                        if not media_info:
-                            continue
-                        mime, data = media_info
-                        ext = guess_extension(mime)
-                        if not ext:
-                            self.warnings.append(
-                                f"unrecognized mime for media file {id}: {mime}"
-                            )
-                        else:
-                            filename = f"{id}{ext}"
-                            filename = self.mw.col.media.write_data(filename, data)
-                            media_refs_map[int(id)] = fname_to_link(filename)
-
-                    for i, side in enumerate(("front_side", "back_side")):
-                        contents = ""
-                        media_ids = [
-                            t["id"] if isinstance(t, dict) else t
-                            for t in media_side_map.get(side, [])
+                for card_dict in note_dicts:
+                    try:
+                        note_dict = card_dict["card"]
+                        label = note_dict.get("label", {})
+                        notetype = self.notetypes[
+                            AnkiProNotetypeKind.type_for_string(label.get("type", ""))
                         ]
-                        if media_ids:
-                            contents += "<br>".join(
-                                media_refs_map[id]
-                                for id in media_ids
-                                if id in media_refs_map
-                            )
-                        contents += note_dict["fields"][side]
-                        note.fields[i] = contents
+                        note = self.mw.col.new_note(notetype)
+                        media_urls_map: dict[str, str] = note_dict.get(
+                            "fieldAttachmentUrls", {}
+                        )
+                        media_side_map: dict[str, Any] = note_dict.get(
+                            "fieldAttachmentsMap", {}
+                        )
+                        tts_map: dict[str, Any] = note_dict.get("textToSpeechMap", {})
+                        media_refs_map = {}
+                        for id, url in media_urls_map.items():
+                            media_info = self._get_media(url)
+                            if not media_info:
+                                continue
+                            mime, data = media_info
+                            ext = guess_extension(mime)
+                            if not ext:
+                                self.warnings.append(
+                                    f"unrecognized mime for media file {id}: {mime}"
+                                )
+                            else:
+                                filename = f"{id}{ext}"
+                                filename = self.mw.col.media.write_data(filename, data)
+                                media_refs_map[int(id)] = fname_to_link(filename)
+
+                        for i, side in enumerate(("front", "back")):
+                            contents = ""
+                            media_ids = [
+                                t["id"] if isinstance(t, dict) else t
+                                for t in media_side_map.get(f"{side}_side", [])
+                            ]
+                            if media_ids:
+                                contents += "<br>".join(
+                                    media_refs_map[id]
+                                    for id in media_ids
+                                    if id in media_refs_map
+                                )
+                            contents += self._process_tts_map(side, tts_map)
+                            contents += note_dict["fields"][f"{side}_side"]
+                            note.fields[i] = contents
+                    except Exception as exc:
+                        logger.warning(
+                            "unexpected error while parsing note in deck %s: exc=%s, note=%s",
+                            deck.id,
+                            str(exc),
+                            note_dict,
+                        )
+                        raise exc
                     self.mw.col.add_note(note, deck.anki_id)
                     count += 1
-                    offset += 1
-
+                    offset += limit
         return count
 
     def do_import(self) -> int:

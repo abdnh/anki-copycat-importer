@@ -26,5 +26,7 @@ for importer_class in IMPORTERS:
     )
     menu.addAction(action)
 
-mw.form.menuTools.addMenu(menu)
-setup_error_handler()
+
+def init() -> None:
+    setup_error_handler()
+    mw.form.menuTools.addMenu(menu)

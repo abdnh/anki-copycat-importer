@@ -3,24 +3,69 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "CopycatImporter"
+name = "copycat_importer"
 authors = [{ name = "Abdo", email = "abdo@abdnh.net" }]
 readme = "README.md"
+requires-python = ">=3.9"
 classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-dynamic = ["dependencies", "optional-dependencies", "version"]
-
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements/bundle.txt"] }
-optional-dependencies.dev = { file = ["requirements/dev.txt"] }
+dynamic = ["version"]
+dependencies = ["ankiutils", "sentry-sdk>=1.14.0"]
 
 [tool.setuptools]
-package-dir = { "CopycatImporter" = "src" }
+package-dir = { "copycat_importer" = "src" }
 
 [tool.setuptools_scm]
 
+[tool.uv]
+constraint-dependencies = [
+    # This is used to constrain Qt versions to the ones used in Anki builds to avoid regressions in newer versions.
+    # See https://github.com/ankitects/anki/blob/main/python/requirements.qt6_6.in
+    "pyqt6==6.6.1",
+    "pyqt6-qt6==6.6.2",
+    "pyqt6-webengine==6.6.0",
+    "pyqt6-webengine-qt6==6.6.2",
+    "pyqt6_sip==13.6.0",
+]
+
+[tool.uv.sources]
+ankiscripts = { git = "https://github.com/abdnh/ankiscripts", branch = "master" }
+ankiutils = { git = "https://github.com/abdnh/ankiutils", branch = "master" }
+
+[dependency-groups]
+dev = [
+    "ankiscripts[forms]",
+    "ankiutils",
+    "aqt>=25.2.4",
+    "mypy>=1.15.0",
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.11.7",
+    "sentry-sdk>=1.14.0",
+    "types-requests",
+    "types-beautifulsoup4",
+]
+
 [project.urls]
-Repository = "https://github.com/abdnh/anki-copycat-importer/"
+Repository = "https://github.com/abdnh/anki-copycat-importer"
+
+[tool.ruff]
+exclude = [
+    ".venv",
+    "ankidata",
+    "vendor",
+    "forms",
+    "user_files",
+    "build",
+    "src/ankiutils",
+    "node_modules",
+]
+
+[tool.ruff.lint]
+extend-select = ["I", "UP", "PL"]
+
+ignore = ["PLW0603"]

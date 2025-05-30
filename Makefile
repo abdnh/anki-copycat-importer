@@ -1,33 +1,39 @@
-.PHONY: all zip ankiweb vendor fix mypy pylint lint test sourcedist clean
+.PHONY: all zip ankiweb vendor ruff-format ruff-check ruff-fix fix mypy lint test sourcedist clean
 
 all: zip ankiweb
 
+UV_RUN = uv run --
+
 zip:
-	python -m ankiscripts.build --type package --qt all --exclude user_files/**/*
+	$(UV_RUN) python -m ankiscripts.build --type package --qt all --exclude user_files/**/*
 
 ankiweb:
-	python -m ankiscripts.build --type ankiweb --qt all --exclude user_files/**/*
+	$(UV_RUN) python -m ankiscripts.build --type ankiweb --qt all --exclude user_files/**/*
 
 vendor:
-	python -m ankiscripts.vendor
+	$(UV_RUN) python -m ankiscripts.vendor
 
-fix:
-	python -m black src tests --exclude="forms|vendor"
-	python -m isort src tests
+ruff-format:
+	$(UV_RUN) pre-commit run -a ruff-format
+
+ruff-check:
+	$(UV_RUN) ruff check
+
+ruff-fix:
+	$(UV_RUN) pre-commit run -a ruff-check
+
+fix: ruff-format ruff-fix
 
 mypy:
-	-python -m mypy src tests
+	-$(UV_RUN) pre-commit run -a mypy
 
-pylint:
-	-python -m pylint src tests
-
-lint: mypy pylint
+lint: mypy ruff-check
 
 test:
-	python -m  pytest --cov=src --cov-config=.coveragerc
+	$(UV_RUN) python -m  pytest --cov=src --cov-config=.coveragerc
 
 sourcedist:
-	python -m ankiscripts.sourcedist
+	$(UV_RUN) python -m ankiscripts.sourcedist
 
 clean:
 	rm -rf build/

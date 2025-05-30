@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-# pylint: disable=too-few-public-methods
 class CopycatImporter(ABC):
     name: str
 

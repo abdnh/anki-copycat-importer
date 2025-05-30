@@ -111,7 +111,6 @@ ankipro_notetypes = {
 }
 
 
-# pylint: disable=too-few-public-methods
 class AnkiProImporter(CopycatImporter):
     name = "AnkiPro"
 
@@ -186,7 +185,6 @@ class AnkiProImporter(CopycatImporter):
             changes = self.mw.col.models.add_dict(notetype)
             self.notetypes[kind] = self.mw.col.models.get(NotetypeId(changes.id))
 
-    # pylint: disable=too-many-locals,too-many-branches
     def _import_cards(self) -> int:
         count = 0
         for deck in self.decks:

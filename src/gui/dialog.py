@@ -1,18 +1,18 @@
 from concurrent.futures import Future
 from typing import Optional, Type
 
-import ankiutils.gui.dialog
 from aqt.main import AnkiQt
 from aqt.qt import *
 from aqt.utils import showText, showWarning, tooltip
 
+from ..ankiutils.gui.dialog import Dialog
 from ..consts import consts
 from ..importers.errors import CopycatImporterCanceled, CopycatImporterError
 from ..importers.importer import CopycatImporter
 from .widgets import IMPORTER_WIDGETS
 
 
-class ImporterDialog(ankiutils.gui.dialog.Dialog):
+class ImporterDialog(Dialog):
     default_size = (750, 300)
 
     def __init__(

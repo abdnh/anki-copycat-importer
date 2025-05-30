@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from ankiutils.config import Config as BaseConfig
+from .ankiutils.config import Config as BaseConfig
 
 
 class Config(BaseConfig):

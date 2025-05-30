@@ -1,10 +1,10 @@
 from typing import Any, Optional
 
-import ankiutils.gui.dialog
 from aqt.main import AnkiQt
 from aqt.qt import *
 from aqt.webview import QWebEnginePage, QWebEngineProfile, QWebEngineUrlRequestInfo
 
+from ..ankiutils.gui.dialog import Dialog
 from ..consts import USER_AGENT, consts
 
 
@@ -45,7 +45,7 @@ class Webview(QWebEngineView):
         self._parent.close()
 
 
-class WebDialog(ankiutils.gui.dialog.Dialog):
+class WebDialog(Dialog):
     def __init__(
         self,
         mw: AnkiQt,

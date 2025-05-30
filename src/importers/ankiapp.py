@@ -75,7 +75,6 @@ class FieldSet(MutableSet):
         return repr(list(self.map.values()))
 
 
-# pylint: disable=too-many-arguments
 class AnkiAppNoteType:
     def __init__(
         self,
@@ -114,7 +113,6 @@ class AnkiAppNoteType:
         return f"NoteType({self.name=}, {self.fields=}, {self.front=}, {self.back=})"
 
 
-# pylint: disable=too-few-public-methods
 class FallbackNotetype(AnkiAppNoteType):
     FRONT = "{{Front}}"
     BACK = dedent(
@@ -170,7 +168,6 @@ class AnkiAppCard:
     tags: list[str]
 
 
-# pylint: disable=too-few-public-methods
 class AnkiAppMedia:
     def __init__(self, ID: str, mime: str, data: bytes):
         self.ID = ID
@@ -180,7 +177,6 @@ class AnkiAppMedia:
         self.filename: str | None = None  # Filename in Anki
 
 
-# pylint: disable=too-few-public-methods,too-many-instance-attributes
 class AnkiAppImporter(CopycatImporter):
     name = "AnkiApp"
 
@@ -318,7 +314,7 @@ class AnkiAppImporter(CopycatImporter):
 
             for knol_data in deck_data.get("knols", []):
                 for i, layout_id in enumerate(deck_layouts):
-                    self.cards[f'{knol_data["id"]}_{i}'] = AnkiAppCard(
+                    self.cards[f"{knol_data['id']}_{i}"] = AnkiAppCard(
                         layout_id=layout_id,
                         deck=deck,
                         fields=knol_data.get("values", {}),

@@ -1,8 +1,8 @@
 from concurrent.futures import Future
-from typing import Optional, Type
+from typing import Optional
 
 from aqt.main import AnkiQt
-from aqt.qt import *
+from aqt.qt import QFormLayout, QPushButton, qconnect
 from aqt.utils import showText, showWarning, tooltip
 
 from ..ankiutils.gui.dialog import Dialog
@@ -18,7 +18,7 @@ class ImporterDialog(Dialog):
     def __init__(
         self,
         mw: AnkiQt,
-        importer_class: Type[CopycatImporter],
+        importer_class: type[CopycatImporter],
     ) -> None:
         self.mw = mw
         self.importer_class = importer_class

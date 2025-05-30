@@ -1,7 +1,7 @@
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from aqt.main import AnkiQt
-from aqt.qt import *
+from aqt.qt import QWidget, qconnect
 from aqt.utils import showWarning
 
 from ...config import config

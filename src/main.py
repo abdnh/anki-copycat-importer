@@ -1,7 +1,6 @@
 import functools
 import os
 import sys
-from typing import Type
 
 from aqt import mw
 from aqt.qt import QAction, QMenu, qconnect
@@ -13,7 +12,7 @@ from .gui.dialog import ImporterDialog
 from .importers import IMPORTERS, CopycatImporter
 
 
-def on_action(importer_class: Type[CopycatImporter]) -> None:
+def on_action(importer_class: type[CopycatImporter]) -> None:
     dialog = ImporterDialog(mw, importer_class)
     dialog.open()
 

@@ -1,8 +1,23 @@
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from aqt.main import AnkiQt
-from aqt.qt import *
-from aqt.webview import QWebEnginePage, QWebEngineProfile, QWebEngineUrlRequestInfo
+from aqt.qt import (
+    QCloseEvent,
+    QObject,
+    Qt,
+    QUrl,
+    QVBoxLayout,
+    QWebEngineSettings,
+    QWebEngineUrlRequestInterceptor,
+    QWidget,
+    qconnect,
+)
+from aqt.webview import (
+    QWebEnginePage,
+    QWebEngineProfile,
+    QWebEngineUrlRequestInfo,
+    QWebEngineView,
+)
 
 from ..ankiutils.gui.dialog import Dialog
 from ..consts import USER_AGENT, consts

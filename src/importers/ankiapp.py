@@ -7,7 +7,7 @@ import time
 from collections.abc import Iterable, Iterator, MutableSet
 from re import Match
 from textwrap import dedent
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import requests
 
@@ -34,7 +34,7 @@ def fix_field_name(text: str) -> str:
 
 
 def field_list_to_refs(flds: list[str]) -> str:
-    return "<br>".join("{{%s}}" % f for f in flds)
+    return "<br>".join(f"{{{{{f}}}}}" for f in flds)
 
 
 class FieldSet(MutableSet):
@@ -248,7 +248,7 @@ class AnkiAppImporter(CopycatImporter):
             return None
 
     def _import_decks(self) -> None:
-        from anki.decks import DeckDict, DeckId
+        from anki.decks import DeckId
 
         self._update_progress("Fetching decks...")
         for key in ("share", "user", "subscriptions"):
@@ -263,13 +263,12 @@ class AnkiAppImporter(CopycatImporter):
         for deck in self.decks.values():
             did = DeckId(self.mw.col.decks.add_normal_deck_with_name(deck.name).id)
             deck.did = did
-            deck_dict = cast(DeckDict, self.mw.col.decks.get(did))
+            deck_dict = self.mw.col.decks.get(did)
             if not deck_dict.get("desc"):
                 deck_dict["desc"] = deck.description
                 self.mw.col.decks.update_dict(deck_dict)
 
-    def _import_cards(self) -> int:
-        notes_count = 0
+    def _fetch_cards(self) -> None:
         self._update_progress("Fetching cards...")
         for deck in self.decks.values():
             deck_data = self._api_get(f"decks/{deck.ID}").json()
@@ -320,10 +319,8 @@ class AnkiAppImporter(CopycatImporter):
                         fields=knol_data.get("values", {}),
                         tags=knol_data.get("tags", []),
                     )
-                    notes_count += 1
 
-        from anki.models import NotetypeDict
-
+    def _import_notetypes(self) -> None:
         self._update_progress("Importing notetypes...")
         for notetype in self.notetypes.values():
             model = self.mw.col.models.new(notetype.name)
@@ -342,10 +339,16 @@ class AnkiAppImporter(CopycatImporter):
                 raise
             notetype.mid = model["id"]
 
+    def _import_media(self) -> None:
         self._update_progress("Importing media...")
         for media in self.media.values():
             filename = self.mw.col.media.write_data(media.ID + media.ext, media.data)
             media.filename = filename
+
+    def _import_cards(self) -> int:
+        self._fetch_cards()
+        self._import_notetypes()
+        self._import_media()
 
         self._update_progress("Importing cards...")
         last_progress = 0.0
@@ -360,7 +363,7 @@ class AnkiAppImporter(CopycatImporter):
 
             notetype = self.notetypes.get(card.deck.ID, self.notetypes[card.layout_id])
             assert notetype.mid is not None
-            model = cast(NotetypeDict, self.mw.col.models.get(notetype.mid))
+            model = self.mw.col.models.get(notetype.mid)
             assert model is not None
             note = self.mw.col.new_note(model)
             for field_name, contents in card.fields.items():
@@ -377,7 +380,7 @@ class AnkiAppImporter(CopycatImporter):
             assert card.deck.did is not None
             self.mw.col.add_note(note, card.deck.did)
             notes_count += 1
-            if time.time() - last_progress >= 0.1:
+            if time.time() - last_progress >= 0.1:  # noqa: PLR2004
                 self._update_progress(
                     label=f"Imported {notes_count} out of {len(self.cards)} cards",
                     value=notes_count,

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from textwrap import dedent
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import requests
 from anki.consts import MODEL_CLOZE
@@ -30,6 +32,14 @@ class AnkiProNotetypeKind(Enum):
     BASIC = 0
     REVERSED = 1
     CLOZE = 2
+
+    @classmethod
+    def type_for_string(cls, type_str: str) -> AnkiProNotetypeKind:
+        if type_str == "reversed":
+            return cls.REVERSED
+        elif type_str == "cloze":
+            return cls.CLOZE
+        return cls.BASIC
 
 
 @dataclass
@@ -114,7 +124,7 @@ ankipro_notetypes = {
 class AnkiProImporter(CopycatImporter):
     name = "AnkiPro"
 
-    def __init__(self, mw: "AnkiQt", token: str):
+    def __init__(self, mw: AnkiQt, token: str):
         super().__init__()
         self.mw = mw
         self.http_client = HttpClient()
@@ -131,7 +141,7 @@ class AnkiProImporter(CopycatImporter):
             **kwrags,
         )
 
-    def _get_media(self, url: str) -> Optional[tuple[str, bytes]]:
+    def _get_media(self, url: str) -> tuple[str, bytes] | None:
         if not config["download_media"]:
             return None
         res = self._get(url)
@@ -211,13 +221,9 @@ class AnkiProImporter(CopycatImporter):
                     break
                 for note_dict in note_dicts:
                     label = note_dict.get("label", {})
-                    nt_type = label.get("type", "")
-                    if nt_type == "reversed":
-                        notetype = self.notetypes[AnkiProNotetypeKind.REVERSED]
-                    elif nt_type == "cloze":
-                        notetype = self.notetypes[AnkiProNotetypeKind.CLOZE]
-                    else:
-                        notetype = self.notetypes[AnkiProNotetypeKind.BASIC]
+                    notetype = self.notetypes[
+                        AnkiProNotetypeKind.type_for_string(label.get("type", ""))
+                    ]
                     note = self.mw.col.new_note(notetype)
                     media_urls_map: dict[str, str] = note_dict.get(
                         "fieldAttachmentUrls", {}

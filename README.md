@@ -10,7 +10,7 @@ The add-on works by downloading your decks from the AnkiPro site. Go to _Tools >
 
 ### Known Issues
 
--   Study progress is not imported.
+- Study progress is not imported.
 
 ## AnkiPro
 
@@ -20,8 +20,8 @@ The add-on works by downloading your decks from the AnkiPro site. Go to _Tools >
 
 ### Known Issues
 
--   Importing of study progress and deck options is not supported yet.
--   AnkiPro is [trying](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/345) to [prevent](https://forums.ankiweb.net/t/copycat-importer/43883) people from exporting their decks using this add-on. You can use [this Chrome extension](https://chromewebstore.google.com/detail/ghmmlnlfpghgbecgkiananhlbfakmcpd) to get your login token then paste it in the text field if you're having trouble logging in via the add-on.
+- Importing of study progress and deck options is not supported yet.
+- AnkiPro is [trying](https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734/345) to [prevent](https://forums.ankiweb.net/t/copycat-importer/43883) people from exporting their decks using this add-on. You can use [this Chrome extension](https://chromewebstore.google.com/detail/ghmmlnlfpghgbecgkiananhlbfakmcpd) to get your login token then paste it in the text field if you're having trouble logging in via the add-on.
 
 ## Download
 
@@ -29,10 +29,10 @@ You can download the add-on from AnkiWeb: [2072125761](https://ankiweb.net/share
 
 ## References
 
--   [Anki knockoffs](https://faqs.ankiweb.net/anki-knockoffs.html)
--   [Help to bypass Ankiapp's paywall for deck export : Anki | Reddit](https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/)
--   [AnkiApp - Support | Can I export my flashcards from AnkiApp?](https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/)
--   [AnkiPro: Another ripoff Anki app - AnkiMobile (iPhone/iPad) - Anki Forums](https://forums.ankiweb.net/t/ankipro-another-ripoff-anki-app/11791)
+- [Anki knockoffs](https://faqs.ankiweb.net/anki-knockoffs.html)
+- [Help to bypass Ankiapp's paywall for deck export : Anki | Reddit](https://www.reddit.com/r/Anki/comments/ocbhry/help_to_bypass_ankiapps_paywall_for_deck_export/)
+- [AnkiApp - Support | Can I export my flashcards from AnkiApp?](https://www.ankiapp.com/support/solutions/ddcf01b0/can-i-export-my-flashcards-from-ankiapp-/)
+- [AnkiPro: Another ripoff Anki app - AnkiMobile (iPhone/iPad) - Anki Forums](https://forums.ankiweb.net/t/ankipro-another-ripoff-anki-app/11791)
 
 ## Changelog
 

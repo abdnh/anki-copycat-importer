@@ -13,7 +13,7 @@ from .widget import ImporterWidget
 
 class AnkiProLoginDialog(WebDialog):
     def __init__(self, mw: AnkiQt, parent: QWidget, on_result: Callable[[str], None]):
-        super().__init__(mw, parent, "https://noji.io/", "Login to AnkiPro", on_result)
+        super().__init__(mw, parent, "https://noji.io/", "Log in to AnkiPro", on_result)
 
     def get_result(self, on_done: Callable[[str], None]) -> None:
         self.web.page().runJavaScript(

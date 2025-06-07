@@ -14,7 +14,7 @@ from .widget import ImporterWidget
 class AnkiAppLoginDialog(WebDialog):
     def __init__(self, mw: AnkiQt, parent: QWidget, on_result: Callable[[Any], None]):
         super().__init__(
-            mw, parent, "https://web.ankiapp.com/", "Login to AnkiApp", on_result
+            mw, parent, "https://web.ankiapp.com/", "Log in to AnkiApp", on_result
         )
 
     def get_result(self, on_done: Callable[[Any], None]) -> None:

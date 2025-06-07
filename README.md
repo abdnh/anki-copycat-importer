@@ -1,6 +1,6 @@
 # Copycat Importer
 
-An [Anki](https://apps.ankiweb.net/) add-on to import decks from copycat apps such as [AnkiApp](https://www.ankiapp.com/) and [AnkiPro](https://ankipro.net/).
+An [Anki](https://apps.ankiweb.net/) add-on to import decks from copycat apps such as [AnkiApp](https://www.ankiapp.com/) and [Noji (formerly AnkiPro)](https://noji.io/).
 
 ## AnkiApp
 

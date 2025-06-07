@@ -123,7 +123,7 @@ ankipro_notetypes = {
 
 
 class AnkiProImporter(CopycatImporter):
-    name = "AnkiPro"
+    name = "AnkiPro/Noji"
 
     def __init__(self, mw: AnkiQt, token: str):
         super().__init__()
@@ -136,7 +136,7 @@ class AnkiProImporter(CopycatImporter):
 
     def _api_get(self, path: str, *args: Any, **kwrags: Any) -> requests.Response:
         return self._get(
-            f"https://api.ankipro.net/api/{path}",
+            f"https://api-proxy-us.noji.io/api/{path}",
             headers={"Authorization": f"Bearer {self.token}"},
             *args,
             **kwrags,

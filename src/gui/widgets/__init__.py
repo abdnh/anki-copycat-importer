@@ -4,5 +4,5 @@ from .widget import ImporterWidget
 
 IMPORTER_WIDGETS: dict[str, type[ImporterWidget]] = {
     "AnkiApp": AnkiAppWidget,
-    "AnkiPro": AnkiProWidget,
+    "AnkiPro/Noji": AnkiProWidget,
 }

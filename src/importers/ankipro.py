@@ -215,6 +215,7 @@ class AnkiProImporter(CopycatImporter):
     def _import_cards(self) -> int:
         limit = 20
         count = 0
+        imported_cids = set()
         for deck in self.decks:
             offset = 0
             while offset < deck.card_count:
@@ -233,6 +234,10 @@ class AnkiProImporter(CopycatImporter):
                 for card_dict in note_dicts:
                     try:
                         note_dict = card_dict["card"]
+                        cid = note_dict["id"]
+                        if cid in imported_cids:
+                            continue
+                        imported_cids.add(cid)
                         label = note_dict.get("label", {})
                         notetype = self.notetypes[
                             AnkiProNotetypeKind.type_for_string(label.get("type", ""))

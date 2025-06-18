@@ -23,7 +23,7 @@ from .utils import fname_to_link, guess_extension
 
 @dataclass
 class AnkiProDeck:
-    id: str
+    id: int
     anki_id: DeckId
     name: str
     card_count: int
@@ -156,7 +156,7 @@ class AnkiProImporter(CopycatImporter):
     def _import_decks(self) -> None:
         res = self._api_get("decks")
         data = res.json()
-        decks: dict[str, AnkiProDeck] = {}
+        decks: dict[int, AnkiProDeck] = {}
         for deck_dict in data.get("decks", []):
             deck = AnkiProDeck(
                 deck_dict["id"],
@@ -219,21 +219,28 @@ class AnkiProImporter(CopycatImporter):
         for deck in self.decks:
             offset = 0
             while offset < deck.card_count:
-                params = {
-                    "deck_id": deck.id,
-                    "limit": limit,
-                    "offset": offset,
-                }
                 res = self._api_get(
-                    "v2/learning/cards",
-                    params=params,
+                    "notes",
+                    params={
+                        "deck_id": deck.id,
+                        "limit": limit,
+                        "offset": offset,
+                    },
                 )
-                note_dicts = res.json()["cards"]
-                if not note_dicts:
+                note_dicts = res.json()
+                if not isinstance(note_dicts, list):
                     break
-                for card_dict in note_dicts:
+                note_ids = ",".join([note_dict["id"] for note_dict in note_dicts])
+                res = self._api_get(
+                    "notes/cards",
+                    params={
+                        "deck_id": deck.id,
+                        "ids": note_ids,
+                    },
+                )
+                note_dicts = res.json()
+                for note_dict in note_dicts:
                     try:
-                        note_dict = card_dict["card"]
                         cid = note_dict["id"]
                         if cid in imported_cids:
                             continue

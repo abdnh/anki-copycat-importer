@@ -291,7 +291,7 @@ class AnkiProImporter(CopycatImporter):
                         raise exc
                     self.mw.col.add_note(note, deck.anki_id)
                     count += 1
-                    offset += limit
+                offset += limit
         return count
 
     def do_import(self) -> int:

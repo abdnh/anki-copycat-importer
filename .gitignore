@@ -14,7 +14,10 @@ src/manifest.json
 src/meta.json
 src/forms/
 src/user_files/*/
-src/ankiutils/
+src/bin/
+src/web/sveltekit/
+src/web/build/
+src/proto/
 vendor/
 node_modules/
 TODO.md

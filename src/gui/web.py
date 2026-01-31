@@ -1,4 +1,6 @@
-from typing import Any, Callable, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 from aqt.main import AnkiQt
 from aqt.qt import (
@@ -19,8 +21,8 @@ from aqt.webview import (
     QWebEngineView,
 )
 
-from ..ankiutils.gui.dialog import Dialog
 from ..consts import USER_AGENT, consts
+from .dialog import Dialog
 
 
 class RequestInterceptor(QWebEngineUrlRequestInterceptor):
@@ -32,7 +34,7 @@ class RequestInterceptor(QWebEngineUrlRequestInterceptor):
 
 
 class WebProfile(QWebEngineProfile):
-    def __init__(self, parent: Optional[QObject] = None) -> None:
+    def __init__(self, parent: QObject | None = None) -> None:
         super().__init__("copycat_importer", parent)
         self.setUrlRequestInterceptor(RequestInterceptor(self))
 
@@ -48,7 +50,7 @@ class WebPage(QWebEnginePage):
 
 
 class Webview(QWebEngineView):
-    def __init__(self, mw: AnkiQt, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, mw: AnkiQt, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.mw = mw
         self._parent = parent
@@ -73,7 +75,7 @@ class WebDialog(Dialog):
         self.url = url
         self.title = title
         self._on_result = on_result
-        super().__init__(__name__, parent, Qt.WindowType.Window)
+        super().__init__(parent, Qt.WindowType.Window)
 
     def setup_ui(self) -> None:
         self.setWindowTitle(f"{consts.name} - {self.title}")

@@ -1,4 +1,6 @@
-from typing import Any, Callable, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 from aqt.main import AnkiQt
 from aqt.qt import QWidget, qconnect
@@ -13,9 +15,7 @@ from .widget import ImporterWidget
 
 class AnkiAppLoginDialog(WebDialog):
     def __init__(self, mw: AnkiQt, parent: QWidget, on_result: Callable[[Any], None]):
-        super().__init__(
-            mw, parent, "https://web.ankiapp.com/", "Log in to AnkiApp", on_result
-        )
+        super().__init__(mw, parent, "https://web.ankiapp.com/", "Log in to AnkiApp", on_result)
 
     def get_result(self, on_done: Callable[[Any], None]) -> None:
         self.web.page().runJavaScript(
@@ -44,9 +44,7 @@ class AnkiAppWidget(ImporterWidget):
         return config.importer_options("ankiapp")
 
     def _is_logged_in(self, login_data: dict[str, str]) -> bool:
-        return bool(
-            login_data.get("client_id", None) and login_data.get("client_token", None)
-        )
+        return bool(login_data.get("client_id", None) and login_data.get("client_token", None))
 
     def _update_login_status(self, login_data: dict[str, str]) -> None:
         logged_in = self._is_logged_in(login_data)
@@ -79,7 +77,7 @@ class AnkiAppWidget(ImporterWidget):
         )
         dialog.exec()
 
-    def on_import(self) -> Optional[dict[str, Any]]:
+    def on_import(self) -> dict[str, Any] | None:
         if not self._is_logged_in(self.login_data):
             showWarning("Not logged in", parent=self, title=consts.name)
             return None

@@ -3,7 +3,7 @@ from typing import Any
 import requests
 
 from ..consts import USER_AGENT
-from .errors import CopycatImporterError
+from .errors import CopycatImporterRequestFailed
 
 
 class HttpClient:
@@ -25,6 +25,7 @@ class HttpClient:
                 **kwrags,
             )
             res.raise_for_status()
-            return res
         except requests.HTTPError as exc:
-            raise CopycatImporterError(f"Request to {url} failed: {str(exc)}") from exc
+            raise CopycatImporterRequestFailed(url, exc) from exc
+        else:
+            return res

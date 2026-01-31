@@ -1,6 +1,6 @@
 from typing import Any
 
-from .ankiutils.config import Config as BaseConfig
+from .vendor.ankiutils.config import Config as BaseConfig
 
 
 class Config(BaseConfig):

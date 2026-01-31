@@ -10,13 +10,14 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, Any
 
 import requests
+from anki.decks import DeckId
 
 if TYPE_CHECKING:
-    from anki.decks import DeckId
     from anki.models import NotetypeId
     from aqt.main import AnkiQt
 
 from ..config import config
+from ..consts import consts
 from ..log import logger
 from .errors import CopycatImporterCanceled
 from .httpclient import HttpClient
@@ -180,9 +181,7 @@ class AnkiAppMedia:
 class AnkiAppImporter(CopycatImporter):
     name = "AnkiApp"
 
-    def __init__(
-        self, mw: AnkiQt, client_id: str, client_token: str, client_version: str
-    ):
+    def __init__(self, mw: AnkiQt, client_id: str, client_token: str, client_version: str):
         super().__init__()
         self.mw = mw
         self.client_id = client_id
@@ -200,13 +199,9 @@ class AnkiAppImporter(CopycatImporter):
             # AnkiApp uses a form like `<audio id="{blob_id}" type="{mime_type}" />` too
             # TODO: extract the type attribute
             # quoted case
-            re.compile(
-                r"(?i)(<(?:img|audio)\b[^>]* id=(?P<str>[\"'])(?P<fname>[^>]+?)(?P=str)[^>]*>)"
-            ),
+            re.compile(r"(?i)(<(?:img|audio)\b[^>]* id=(?P<str>[\"'])(?P<fname>[^>]+?)(?P=str)[^>]*>)"),
             # unquoted case
-            re.compile(
-                r"(?i)(<(?:img|audio)\b[^>]* id=(?!['\"])(?P<fname>[^ >]+)[^>]*?>)"
-            ),
+            re.compile(r"(?i)(<(?:img|audio)\b[^>]* id=(?!['\"])(?P<fname>[^ >]+)[^>]*?>)"),
         )
 
     def _get_request(self, url: str) -> requests.Response:
@@ -223,13 +218,9 @@ class AnkiAppImporter(CopycatImporter):
     def _api_get(self, path: str) -> requests.Response:
         response = self._get_request(f"https://api.ankiapp.com/{path}")
         if os.environ.get("DEBUG"):
-            from ..consts import consts
-
             tmp_dir = consts.dir / "tmp" / "requests"
             tmp_dir.mkdir(exist_ok=True, parents=True)
-            with open(
-                f"{tmp_dir}/{path.replace('/', '_')}.json", "w", encoding="utf-8"
-            ) as f:
+            with open(f"{tmp_dir}/{path.replace('/', '_')}.json", "w", encoding="utf-8") as f:
                 f.write(response.text)
 
         return response
@@ -248,8 +239,6 @@ class AnkiAppImporter(CopycatImporter):
             return None
 
     def _import_decks(self) -> None:
-        from anki.decks import DeckId
-
         self._update_progress("Fetching decks...")
         for key in ("share", "user", "subscriptions"):
             for deck in self._api_get("decks").json().get(key, []):
@@ -357,9 +346,7 @@ class AnkiAppImporter(CopycatImporter):
         for card in self.cards.values():
             for field_name, contents in card.fields.items():
                 for ref_re in self.BLOB_REF_PATTERNS:
-                    card.fields[field_name] = ref_re.sub(
-                        self._repl_blob_ref, card.fields[field_name]
-                    )
+                    card.fields[field_name] = ref_re.sub(self._repl_blob_ref, card.fields[field_name])
 
             notetype = self.notetypes.get(card.deck.ID, self.notetypes[card.layout_id])
             assert notetype.mid is not None
@@ -394,9 +381,7 @@ class AnkiAppImporter(CopycatImporter):
         if self.mw.progress.want_cancel():
             raise CopycatImporterCanceled()
 
-    def _update_progress(
-        self, label: str, value: int | None = None, max: int | None = None
-    ) -> None:
+    def _update_progress(self, label: str, value: int | None = None, max: int | None = None) -> None:
         def on_main() -> None:
             self.mw.progress.update(label=label, value=value, max=max)
 
@@ -405,9 +390,7 @@ class AnkiAppImporter(CopycatImporter):
 
     def _check_media_mime(self, media: AnkiAppMedia) -> bool:
         if not media.ext:
-            self.warnings.append(
-                f"unrecognized mime for media file {media.ID}: {media.mime}"
-            )
+            self.warnings.append(f"unrecognized mime for media file {media.ID}: {media.mime}")
             return False
         return True
 
@@ -419,9 +402,7 @@ class AnkiAppImporter(CopycatImporter):
         else:
             media_obj = self._get_media(blob_id)
             if media_obj and self._check_media_mime(media_obj):
-                filename = self.mw.col.media.write_data(
-                    media_obj.ID + media_obj.ext, media_obj.data
-                )
+                filename = self.mw.col.media.write_data(media_obj.ID + media_obj.ext, media_obj.data)
                 media_obj.filename = filename
                 self.media[media_obj.ID] = media_obj
         if media_obj and media_obj.filename:

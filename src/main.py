@@ -1,31 +1,14 @@
-import functools
-import os
-import sys
+from .patches import patch_certifi
 
-from aqt import mw
-from aqt.qt import QAction, QMenu, qconnect
+patch_certifi()
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
-
+# ruff: noqa: E402
+from .backend.server import init_server
 from .errors import setup_error_handler
-from .gui.dialog import ImporterDialog
-from .importers import IMPORTERS, CopycatImporter
-
-
-def on_action(importer_class: type[CopycatImporter]) -> None:
-    dialog = ImporterDialog(mw, importer_class)
-    dialog.open()
-
-
-menu = QMenu("Copycat Importer", mw)
-for importer_class in IMPORTERS:
-    action = QAction(f"Import from {importer_class.name}", menu)
-    qconnect(
-        action.triggered, functools.partial(on_action, importer_class=importer_class)
-    )
-    menu.addAction(action)
+from .menu import add_menu
 
 
 def init() -> None:
     setup_error_handler()
-    mw.form.menuTools.addMenu(menu)
+    add_menu()
+    init_server()

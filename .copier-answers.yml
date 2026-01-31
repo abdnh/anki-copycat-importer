@@ -1,0 +1,13 @@
+_commit: 0.0.3-27-gf96318f
+_src_path: https://github.com/abdnh/anki-addon-template
+add_author_support_links: true
+ankiweb_id: '2072125761'
+author: Abdo
+docs_page: https://abdnh.github.io/anki-copycat-importer
+email: abdo@abdnh.net
+forums_page: https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734
+github_page: https://github.com/abdnh/anki-copycat-importer
+max_point_version: 0
+min_point_version: 50
+package_name: copycat_importer
+project_name: Copycat Importer

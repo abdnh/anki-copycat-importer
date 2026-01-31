@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import html
 import mimetypes
 import urllib
-from typing import Optional
 
 import aqt
 
@@ -16,7 +17,7 @@ def fname_to_link(fname: str) -> str:
     return f"[sound:{html.escape(fname, quote=False)}]"
 
 
-def guess_extension(mime: str) -> Optional[str]:
+def guess_extension(mime: str) -> str | None:
     # Work around guess_extension() not recognizing some file types
     extensions_for_mimes = {
         # .webp is not recognized on Windows without additional software

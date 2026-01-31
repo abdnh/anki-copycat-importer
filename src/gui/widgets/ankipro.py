@@ -1,4 +1,6 @@
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from aqt.main import AnkiQt
 from aqt.qt import Callable, QWidget, qconnect
@@ -40,7 +42,7 @@ class AnkiProWidget(ImporterWidget):
         self._update_login_status(self.token)
 
     @property
-    def token(self) -> Optional[str]:
+    def token(self) -> str | None:
         return config.importer_options("ankipro").get("token", None)
 
     def _update_login_status(self, token: str) -> None:
@@ -66,7 +68,7 @@ class AnkiProWidget(ImporterWidget):
         )
         dialog.exec()
 
-    def on_import(self) -> Optional[dict[str, Any]]:
+    def on_import(self) -> dict[str, Any] | None:
         token = self.form.token.text() or self.token
         importer_options = config["importer_options"]
         importer_options["ankipro"]["token"] = token

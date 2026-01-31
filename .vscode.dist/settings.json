@@ -2,9 +2,15 @@
     "[html]": {
         "editor.formatOnSave": false
     },
+    "editor.defaultFormatter": "dprint.dprint",
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
+    "[proto]": {
+        "editor.defaultFormatter": "DrBlury.protobuf-vsc"
+    },
+    "protobuf.formatter.preset": "buf",
+    "protobuf.buf.path": "${workspaceFolder}\\ts\\node_modules\\@bufbuild\\buf-win32-x64\\bin\\buf.exe",
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit"
     },

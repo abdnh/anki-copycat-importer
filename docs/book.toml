@@ -1,0 +1,4 @@
+[book]
+title = "{{ project_name }} Docs"
+authors = ["{{ author }}"]
+language = "en"

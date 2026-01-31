@@ -3,5 +3,10 @@
     "homepage": "https://github.com/abdnh/anki-copycat-importer",
     "min_point_version": 50,
     "name": "Copycat Importer",
-    "package": "copycat_importer"
+    "package": "copycat_importer",
+    "support_channels": {
+        "forums": "https://forums.ankiweb.net/t/copycat-importer-ankiapp-ankipro/16734",
+        "github": "https://github.com/abdnh/anki-copycat-importer/issues"
+    },
+    "docs_page": "https://abdnh.github.io/anki-copycat-importer"
 }

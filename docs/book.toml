@@ -1,4 +1,4 @@
 [book]
-title = "{{ project_name }} Docs"
+title = "Copycat Importer Docs"
 authors = ["{{ author }}"]
 language = "en"

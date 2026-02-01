@@ -23,6 +23,7 @@ class ImporterDialog(Dialog):
     ) -> None:
         self.mw = mw
         self.importer_class = importer_class
+        self.key = self.importer_class.name
         super().__init__(parent=mw, subtitle=self.importer_class.name)
 
     def setup_ui(self) -> None:

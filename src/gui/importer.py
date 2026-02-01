@@ -23,7 +23,7 @@ class ImporterDialog(Dialog):
     ) -> None:
         self.mw = mw
         self.importer_class = importer_class
-        super().__init__(parent=mw)
+        super().__init__(parent=mw, subtitle=self.importer_class.name)
 
     def setup_ui(self) -> None:
         self.setWindowTitle(f"{consts.name} - {self.importer_class.name}")

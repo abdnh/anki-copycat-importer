@@ -22,20 +22,20 @@ from .utils import fname_to_link, guess_extension
 
 
 @dataclass
-class AnkiProDeck:
+class NojiDeck:
     id: int
     anki_id: DeckId
     name: str
     card_count: int
 
 
-class AnkiProNotetypeKind(Enum):
+class NojiNotetypeKind(Enum):
     BASIC = 0
     REVERSED = 1
     CLOZE = 2
 
     @classmethod
-    def type_for_string(cls, type_str: str) -> AnkiProNotetypeKind:
+    def type_for_string(cls, type_str: str) -> NojiNotetypeKind:
         if type_str == "reversed":
             return cls.REVERSED
         elif type_str == "cloze":
@@ -44,7 +44,7 @@ class AnkiProNotetypeKind(Enum):
 
 
 @dataclass
-class AnkiProNotetype:
+class NojiNotetype:
     name: str
     templates: list[tuple[str, str]]
     css: str
@@ -104,15 +104,15 @@ cloze_css = """.card {
 }
 """
 
-ankipro_notetypes = {
-    AnkiProNotetypeKind.BASIC: AnkiProNotetype("AnkiPro Basic", [basic_template], basic_css),
-    AnkiProNotetypeKind.REVERSED: AnkiProNotetype(
-        "AnkiPro Basic (and reversed card)",
+noji_notetypes = {
+    NojiNotetypeKind.BASIC: NojiNotetype("Noji Basic", [basic_template], basic_css),
+    NojiNotetypeKind.REVERSED: NojiNotetype(
+        "Noji Basic (and reversed card)",
         [basic_template, reversed_template],
         basic_css,
     ),
-    AnkiProNotetypeKind.CLOZE: AnkiProNotetype(
-        "AnkiPro Cloze",
+    NojiNotetypeKind.CLOZE: NojiNotetype(
+        "Noji Cloze",
         [cloze_template],
         cloze_css,
         is_cloze=True,
@@ -120,8 +120,8 @@ ankipro_notetypes = {
 }
 
 
-class AnkiProImporter(CopycatImporter):
-    name = "AnkiPro/Noji"
+class NojiImporter(CopycatImporter):
+    name = "Noji"
 
     def __init__(self, mw: AnkiQt, token: str):
         super().__init__()
@@ -154,9 +154,9 @@ class AnkiProImporter(CopycatImporter):
     def _import_decks(self) -> None:
         res = self._api_get("decks")
         data = res.json()
-        decks: dict[int, AnkiProDeck] = {}
+        decks: dict[int, NojiDeck] = {}
         for deck_dict in data.get("decks", []):
-            deck = AnkiProDeck(
+            deck = NojiDeck(
                 deck_dict["id"],
                 DeckId(1),
                 deck_dict["name"],
@@ -182,13 +182,13 @@ class AnkiProImporter(CopycatImporter):
         self.decks = list(decks.values())
 
     def _import_notetypes(self) -> None:
-        self.notetypes: dict[AnkiProNotetypeKind, NotetypeDict] = {}
-        for kind, ankipro_notetype in ankipro_notetypes.items():
-            notetype = self.mw.col.models.new(ankipro_notetype.name)
-            notetype["css"] = ankipro_notetype.css
-            if ankipro_notetype.is_cloze:
+        self.notetypes: dict[NojiNotetypeKind, NotetypeDict] = {}
+        for kind, noji_notetype in noji_notetypes.items():
+            notetype = self.mw.col.models.new(noji_notetype.name)
+            notetype["css"] = noji_notetype.css
+            if noji_notetype.is_cloze:
                 notetype["type"] = MODEL_CLOZE
-            for n, (front, back) in enumerate(ankipro_notetype.templates, start=1):
+            for n, (front, back) in enumerate(noji_notetype.templates, start=1):
                 template = self.mw.col.models.new_template(f"Card {n}")
                 template["qfmt"] = front
                 template["afmt"] = back
@@ -210,7 +210,7 @@ class AnkiProImporter(CopycatImporter):
             tts_list.append(f"[anki:tts lang={lang}]{tts['text']}[/anki:tts]")
         return "".join(tts_list)
 
-    def _import_cards_for_notes(self, deck: AnkiProDeck, note_dicts: list[dict], imported_cids: set[str]) -> int:
+    def _import_cards_for_notes(self, deck: NojiDeck, note_dicts: list[dict], imported_cids: set[str]) -> int:
         note_ids = ",".join([note_dict["id"] for note_dict in note_dicts])
         if not note_ids:
             return 0
@@ -230,7 +230,7 @@ class AnkiProImporter(CopycatImporter):
                     continue
                 imported_cids.add(cid)
                 label = note_dict.get("label", {})
-                notetype = self.notetypes[AnkiProNotetypeKind.type_for_string(label.get("type", ""))]
+                notetype = self.notetypes[NojiNotetypeKind.type_for_string(label.get("type", ""))]
                 note = self.mw.col.new_note(notetype)
                 media_urls_map: dict[str, str] = note_dict.get("fieldAttachmentUrls", {})
                 media_side_map: dict[str, Any] = note_dict.get("fieldAttachmentsMap", {})

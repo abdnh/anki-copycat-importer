@@ -8,14 +8,14 @@ from aqt.utils import showWarning
 
 from ...config import config
 from ...consts import consts
-from ...forms.ankipro import Ui_Form
+from ...forms.noji import Ui_Form
 from ..web import WebDialog
 from .widget import ImporterWidget
 
 
-class AnkiProLoginDialog(WebDialog):
+class NojiLoginDialog(WebDialog):
     def __init__(self, mw: AnkiQt, parent: QWidget, on_result: Callable[[str], None]):
-        super().__init__(mw, parent, "https://noji.io/", "Log in to AnkiPro", on_result)
+        super().__init__(mw, parent, "https://noji.io/", "Log in to Noji", on_result)
 
     def get_result(self, on_done: Callable[[str], None]) -> None:
         self.web.page().runJavaScript(
@@ -34,7 +34,7 @@ class AnkiProLoginDialog(WebDialog):
         return super().get_result(on_done)
 
 
-class AnkiProWidget(ImporterWidget):
+class NojiWidget(ImporterWidget):
     def setup_ui(self) -> None:
         self.form = Ui_Form()
         self.form.setupUi(self)
@@ -61,7 +61,7 @@ class AnkiProWidget(ImporterWidget):
             self.form.login_button.setFocus()
 
     def on_login(self) -> None:
-        dialog = AnkiProLoginDialog(
+        dialog = NojiLoginDialog(
             self.importer_dialog.mw,
             self.importer_dialog.mw,
             on_result=self._update_login_status,

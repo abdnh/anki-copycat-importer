@@ -1,8 +1,8 @@
-from .ankiapp import AnkiAppWidget
-from .ankipro import AnkiProWidget
+from .algoapp import AlgoAppWidget
+from .noji import NojiWidget
 from .widget import ImporterWidget
 
 IMPORTER_WIDGETS: dict[str, type[ImporterWidget]] = {
-    "AnkiApp": AnkiAppWidget,
-    "AnkiPro/Noji": AnkiProWidget,
+    "AlgoApp": AlgoAppWidget,
+    "Noji": NojiWidget,
 }

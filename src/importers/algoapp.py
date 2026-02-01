@@ -76,7 +76,7 @@ class FieldSet(MutableSet):
         return repr(list(self.map.values()))
 
 
-class AnkiAppNoteType:
+class AlgoAppNoteType:
     def __init__(
         self,
         name: str,
@@ -93,10 +93,10 @@ class AnkiAppNoteType:
         self.back = self._fix_field_refs(back)
         self._replace_special_fields()
 
-    ANKIAPP_FIELD_REF_RE = re.compile(r"\{\{\[(#|/|^)?(.*?)\]\}\}")
+    ALGOAPP_FIELD_REF_RE = re.compile(r"\{\{\[(#|/|^)?(.*?)\]\}\}")
 
     def _fix_field_refs(self, template: str) -> str:
-        """Transform AnkiApp's field reference syntax, e.g. `{{[FieldName]}}`"""
+        """Transform AlgoApp's field reference syntax, e.g. `{{[FieldName]}}`"""
 
         def repl(m: Match[str]) -> str:
             field = self.fields.get(m.group(2))
@@ -104,17 +104,17 @@ class AnkiAppNoteType:
                 field = m.group(2)
             return "{{{{{}{}}}}}".format(m.group(1) or "", field)
 
-        return self.ANKIAPP_FIELD_REF_RE.sub(repl, template)
+        return self.ALGOAPP_FIELD_REF_RE.sub(repl, template)
 
     def _replace_special_fields(self) -> None:
-        """Replace AnkiApp's special `{{BackSide}}` reference in front template."""
+        """Replace AlgoApp's special `{{BackSide}}` reference in front template."""
         self.front = self.front.replace("{{BackSide}}", self.back)
 
     def __repr__(self) -> str:
         return f"NoteType({self.name=}, {self.fields=}, {self.front=}, {self.back=})"
 
 
-class FallbackNotetype(AnkiAppNoteType):
+class FallbackNotetype(AlgoAppNoteType):
     FRONT = "{{Front}}"
     BACK = dedent(
         """\
@@ -139,7 +139,7 @@ class FallbackNotetype(AnkiAppNoteType):
     def __init__(
         self,
         extra_fields: FieldSet = FieldSet(),
-        name: str = "AnkiApp Fallback Notetype",
+        name: str = "AlgoApp Fallback Notetype",
     ) -> None:
         super().__init__(
             name,
@@ -154,7 +154,7 @@ class FallbackNotetype(AnkiAppNoteType):
 
 
 @dataclasses.dataclass
-class AnkiAppDeck:
+class AlgoAppDeck:
     did: DeckId | None = dataclasses.field(default=None, init=False)
     ID: str
     name: str
@@ -162,14 +162,14 @@ class AnkiAppDeck:
 
 
 @dataclasses.dataclass
-class AnkiAppCard:
+class AlgoAppCard:
     layout_id: str
-    deck: AnkiAppDeck
+    deck: AlgoAppDeck
     fields: dict[str, str]
     tags: list[str]
 
 
-class AnkiAppMedia:
+class AlgoAppMedia:
     def __init__(self, ID: str, mime: str, data: bytes):
         self.ID = ID
         self.mime = mime
@@ -178,8 +178,8 @@ class AnkiAppMedia:
         self.filename: str | None = None  # Filename in Anki
 
 
-class AnkiAppImporter(CopycatImporter):
-    name = "AnkiApp"
+class AlgoAppImporter(CopycatImporter):
+    name = "AlgoApp"
 
     def __init__(self, mw: AnkiQt, client_id: str, client_token: str, client_version: str):
         super().__init__()
@@ -188,15 +188,15 @@ class AnkiAppImporter(CopycatImporter):
         self.client_token = client_token
         self.client_version = client_version
         self.http_client = HttpClient()
-        self.decks: dict[str, AnkiAppDeck] = {}
-        self.notetypes: dict[str, AnkiAppNoteType] = {}
-        self.media: dict[str, AnkiAppMedia] = {}
-        self.cards: dict[str, AnkiAppCard] = {}
+        self.decks: dict[str, AlgoAppDeck] = {}
+        self.notetypes: dict[str, AlgoAppNoteType] = {}
+        self.media: dict[str, AlgoAppMedia] = {}
+        self.cards: dict[str, AlgoAppCard] = {}
         self.BLOB_REF_PATTERNS = (
             # Use Anki's HTML media patterns too for completeness
             *(re.compile(p) for p in mw.col.media.html_media_regexps),
             re.compile(r"{{blob (?P<fname>.*?)}}"),
-            # AnkiApp uses a form like `<audio id="{blob_id}" type="{mime_type}" />` too
+            # AlgoApp uses a form like `<audio id="{blob_id}" type="{mime_type}" />` too
             # TODO: extract the type attribute
             # quoted case
             re.compile(r"(?i)(<(?:img|audio)\b[^>]* id=(?P<str>[\"'])(?P<fname>[^>]+?)(?P=str)[^>]*>)"),
@@ -216,7 +216,7 @@ class AnkiAppImporter(CopycatImporter):
         )
 
     def _api_get(self, path: str) -> requests.Response:
-        response = self._get_request(f"https://api.ankiapp.com/{path}")
+        response = self._get_request(f"https://api.algoapp.ai/{path}")
         if os.environ.get("DEBUG"):
             tmp_dir = consts.dir / "tmp" / "requests"
             tmp_dir.mkdir(exist_ok=True, parents=True)
@@ -225,16 +225,16 @@ class AnkiAppImporter(CopycatImporter):
 
         return response
 
-    def _get_media(self, blob_id: str) -> AnkiAppMedia | None:
+    def _get_media(self, blob_id: str) -> AlgoAppMedia | None:
         if not config["download_media"]:
             return None
         try:
-            response = self._get_request(f"https://blobs.ankiapp.com/{blob_id}")
+            response = self._get_request(f"https://blobs.algoapp.ai/{blob_id}")
             data = response.content
             mime = response.headers.get("content-type")
             if not mime:
                 return None
-            return AnkiAppMedia(blob_id, mime, data)
+            return AlgoAppMedia(blob_id, mime, data)
         except Exception:
             return None
 
@@ -243,7 +243,7 @@ class AnkiAppImporter(CopycatImporter):
         for key in ("share", "user", "subscriptions"):
             for deck in self._api_get("decks").json().get(key, []):
                 print(deck)
-                self.decks[deck["id"]] = AnkiAppDeck(
+                self.decks[deck["id"]] = AlgoAppDeck(
                     ID=deck["id"],
                     name=deck["name"],
                     description=deck.get("description", ""),
@@ -272,11 +272,11 @@ class AnkiAppImporter(CopycatImporter):
                         if side == 1:
                             template_fields[i].append(field_names.get(field["name"]))
                 notetype_name = deck.name
-                notetype: AnkiAppNoteType
+                notetype: AlgoAppNoteType
                 if any(not t for t in template_fields):
                     notetype = FallbackNotetype(field_names, notetype_name)
                 else:
-                    notetype = AnkiAppNoteType(
+                    notetype = AlgoAppNoteType(
                         notetype_name,
                         field_names,
                         FallbackNotetype.CSS,
@@ -291,7 +291,7 @@ class AnkiAppImporter(CopycatImporter):
                     fields = layout["knol_keys"] or []
                     style = layout["style"] or ""
                     templates = layout["templates"]
-                    self.notetypes[layout["id"]] = AnkiAppNoteType(
+                    self.notetypes[layout["id"]] = AlgoAppNoteType(
                         name=name,
                         fields=FieldSet(fields),
                         style=style,
@@ -302,7 +302,7 @@ class AnkiAppImporter(CopycatImporter):
 
             for knol_data in deck_data.get("knols", []):
                 for i, layout_id in enumerate(deck_layouts):
-                    self.cards[f"{knol_data['id']}_{i}"] = AnkiAppCard(
+                    self.cards[f"{knol_data['id']}_{i}"] = AlgoAppCard(
                         layout_id=layout_id,
                         deck=deck,
                         fields=knol_data.get("values", {}),
@@ -388,7 +388,7 @@ class AnkiAppImporter(CopycatImporter):
         self.mw.taskman.run_on_main(on_main)
         self._cancel_if_needed()
 
-    def _check_media_mime(self, media: AnkiAppMedia) -> bool:
+    def _check_media_mime(self, media: AlgoAppMedia) -> bool:
         if not media.ext:
             self.warnings.append(f"unrecognized mime for media file {media.ID}: {media.mime}")
             return False

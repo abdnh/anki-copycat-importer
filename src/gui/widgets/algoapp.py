@@ -8,14 +8,14 @@ from aqt.utils import showWarning
 
 from ...config import config
 from ...consts import consts
-from ...forms.ankiapp import Ui_Form
+from ...forms.algoapp import Ui_Form
 from ..web import WebDialog
 from .widget import ImporterWidget
 
 
-class AnkiAppLoginDialog(WebDialog):
+class AlgoAppLoginDialog(WebDialog):
     def __init__(self, mw: AnkiQt, parent: QWidget, on_result: Callable[[Any], None]):
-        super().__init__(mw, parent, "https://web.ankiapp.com/", "Log in to AnkiApp", on_result)
+        super().__init__(mw, parent, "https://web.algoapp.ai/", "Log in to AlgoApp", on_result)
 
     def get_result(self, on_done: Callable[[Any], None]) -> None:
         self.web.page().runJavaScript(
@@ -32,7 +32,7 @@ class AnkiAppLoginDialog(WebDialog):
         )
 
 
-class AnkiAppWidget(ImporterWidget):
+class AlgoAppWidget(ImporterWidget):
     def setup_ui(self) -> None:
         self.form = Ui_Form()
         self.form.setupUi(self)
@@ -70,7 +70,7 @@ class AnkiAppWidget(ImporterWidget):
         self._update_login_status(login_data)
 
     def on_login(self) -> None:
-        dialog = AnkiAppLoginDialog(
+        dialog = AlgoAppLoginDialog(
             self.importer_dialog.mw,
             self.importer_dialog.mw,
             on_result=self._on_login_data,

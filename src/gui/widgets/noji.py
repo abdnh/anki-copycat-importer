@@ -70,9 +70,9 @@ class NojiWidget(ImporterWidget):
 
     def on_import(self) -> dict[str, Any] | None:
         token = self.form.token.text() or self.token
-        importer_options = config["importer_options"]
-        importer_options["ankipro"]["token"] = token
-        config["importer_options"] = importer_options
+        ankipro_options = config.importer_options("ankipro")
+        ankipro_options["token"] = token
+        config["importer_options"]["ankipro"] = ankipro_options
         if not token:
             showWarning("Not logged in", parent=self, title=consts.name)
             return None

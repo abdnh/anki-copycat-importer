@@ -62,11 +62,11 @@ class AlgoAppWidget(ImporterWidget):
             self.form.login_button.setFocus()
 
     def _on_login_data(self, login_data: dict[str, str]) -> None:
-        importer_options = config["importer_options"]
-        importer_options["ankiapp"]["client_id"] = login_data["client_id"]
-        importer_options["ankiapp"]["client_token"] = login_data["client_token"]
-        importer_options["ankiapp"]["client_version"] = login_data["client_version"]
-        config["importer_options"] = importer_options
+        ankiapp_options = config.importer_options("ankiapp")
+        ankiapp_options["client_id"] = login_data["client_id"]
+        ankiapp_options["client_token"] = login_data["client_token"]
+        ankiapp_options["client_version"] = login_data["client_version"]
+        config["importer_options"]["ankiapp"] = ankiapp_options
         self._update_login_status(login_data)
 
     def on_login(self) -> None:

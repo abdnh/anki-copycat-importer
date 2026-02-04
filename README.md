@@ -1,6 +1,6 @@
 # Copycat Importer
 
-See the [docs](./docs/intro.md) for usage.
+See the [docs](./docs/src/intro.md) for usage.
 
 ## Download
 

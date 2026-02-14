@@ -150,6 +150,7 @@ class NojiImporter(CopycatImporter):
                 return None
             data = res.content
         except Exception:
+            logger.exception("Failed to download media file", url=url)
             self.warnings.append(f"Failed to download media file: {url}")
             return None
         else:
@@ -249,7 +250,8 @@ class NojiImporter(CopycatImporter):
                         mime, data = media_info
                         ext = guess_extension(mime)
                         if not ext:
-                            self.warnings.append(f"unrecognized mime for media file {id}: {mime}")
+                            logger.warning("Unrecognized mime for media file", id=id, mime=mime)
+                            self.warnings.append(f"Unrecognized mime for media file {id}: {mime}")
                     if not ext:
                         # Assume PNG if type is not recognized or media download fails or is disabled
                         ext = ".png"

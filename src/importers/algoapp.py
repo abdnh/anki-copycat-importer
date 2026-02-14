@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import os
 import re
 import time
 from collections.abc import Iterable, Iterator, MutableSet
@@ -17,7 +16,6 @@ if TYPE_CHECKING:
     from aqt.main import AnkiQt
 
 from ..config import config
-from ..consts import consts
 from ..log import logger
 from .errors import CopycatImporterCanceled
 from .httpclient import HttpClient
@@ -216,14 +214,7 @@ class AlgoAppImporter(CopycatImporter):
         )
 
     def _api_get(self, path: str) -> requests.Response:
-        response = self._get_request(f"https://api.algoapp.ai/{path}")
-        if os.environ.get("DEBUG"):
-            tmp_dir = consts.dir / "tmp" / "requests"
-            tmp_dir.mkdir(exist_ok=True, parents=True)
-            with open(f"{tmp_dir}/{path.replace('/', '_')}.json", "w", encoding="utf-8") as f:
-                f.write(response.text)
-
-        return response
+        return self._get_request(f"https://api.algoapp.ai/{path}")
 
     def _get_media(self, blob_id: str) -> AlgoAppMedia | None:
         if not config["download_media"]:

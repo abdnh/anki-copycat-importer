@@ -3,6 +3,7 @@ from typing import Any
 import requests
 
 from ..consts import USER_AGENT
+from ..log import logger
 from .errors import CopycatImporterRequestFailed
 
 
@@ -28,4 +29,12 @@ class HttpClient:
         except requests.HTTPError as exc:
             raise CopycatImporterRequestFailed(url, exc) from exc
         else:
+            log_dict: dict[str, Any] = {
+                "url": url,
+                "status_code": res.status_code,
+                "content_type": res.headers.get("Content-Type"),
+            }
+            if res.encoding == "utf-8":
+                log_dict["contents"] = res.text
+            logger.debug("request", **log_dict)
             return res

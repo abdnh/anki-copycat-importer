@@ -143,13 +143,17 @@ class NojiImporter(CopycatImporter):
     def _get_media(self, url: str) -> tuple[str, bytes] | None:
         if not config["download_media"]:
             return None
-        res = self._get(url)
-        mime = res.headers.get("content-type", None)
-        if not mime:
+        try:
+            res = self._get(url)
+            mime = res.headers.get("content-type", None)
+            if not mime:
+                return None
+            data = res.content
+        except Exception:
+            self.warnings.append(f"Failed to download media file: {url}")
             return None
-        data = res.content
-
-        return mime, data
+        else:
+            return mime, data
 
     def _import_decks(self) -> None:
         res = self._api_get("decks")

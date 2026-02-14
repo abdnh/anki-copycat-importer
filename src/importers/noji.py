@@ -243,7 +243,7 @@ class NojiImporter(CopycatImporter):
                 tts_map: dict[str, Any] = note_dict.get("textToSpeechMap", {})
                 media_refs_map = {}
                 for id, url in media_urls_map.items():
-                    media_info = self._get_media(url)
+                    media_info = self._get_media(url) if url else None
                     ext = ""
                     data = b""
                     if media_info:

@@ -201,35 +201,36 @@ class NojiImporter(CopycatImporter):
 
     def _process_tts_map(self, side: str, tts_map: dict[str, Any]) -> str:
         tts_list = []
-        for tts in tts_map[side]:
+        for tts in tts_map.get(side, []):
             lang_parts = tts["language"].split("-")
             lang_parts[0] = lang_parts[0].lower()
             if len(lang_parts) == 2:
                 lang_parts[1] = lang_parts[1].upper()
             lang = "_".join(lang_parts)
             tts_list.append(f"[anki:tts lang={lang}]{tts['text']}[/anki:tts]")
+
         return "".join(tts_list)
 
-    def _import_cards_for_notes(self, deck: NojiDeck, note_dicts: list[dict], imported_cids: set[str]) -> int:
-        note_ids = ",".join([note_dict["id"] for note_dict in note_dicts])
-        if not note_ids:
+    def _import_cards_for_notes(self, deck: NojiDeck, note_dicts: dict[str, dict], imported_cids: set[str]) -> int:
+        if not note_dicts:
             return 0
         count = 0
         res = self._api_get(
             "notes/cards",
             params={
                 "deck_id": deck.id,
-                "ids": note_ids,
+                "ids": ",".join(note_dicts.keys()),
             },
         )
-        note_dicts = res.json()
-        for note_dict in note_dicts:
+        card_dicts = res.json()
+        for card_dict in card_dicts:
             try:
-                cid = note_dict["id"]
+                cid = card_dict["id"]
                 if cid in imported_cids:
                     continue
                 imported_cids.add(cid)
-                label = note_dict.get("label", {})
+                note_dict = note_dicts.get(cid.split("-")[0])
+                label = card_dict.get("label", {})
                 notetype = self.notetypes[NojiNotetypeKind.type_for_string(label.get("type", ""))]
                 note = self.mw.col.new_note(notetype)
                 media_urls_map: dict[str, str] = note_dict.get("fieldAttachmentUrls", {})
@@ -247,22 +248,24 @@ class NojiImporter(CopycatImporter):
                     else:
                         filename = f"{id}{ext}"
                         filename = self.mw.col.media.write_data(filename, data)
-                        media_refs_map[int(id)] = fname_to_link(filename)
+                        media_refs_map[str(id)] = fname_to_link(filename)
 
                 for i, side in enumerate(("front", "back")):
                     contents = ""
                     media_ids = [t["id"] if isinstance(t, dict) else t for t in media_side_map.get(f"{side}_side", [])]
                     if media_ids:
-                        contents += "<br>".join(media_refs_map[id] for id in media_ids if id in media_refs_map)
+                        contents += "<br>".join(
+                            media_refs_map[str(id)] for id in media_ids if str(id) in media_refs_map
+                        )
                     contents += self._process_tts_map(side, tts_map)
-                    contents += note_dict["fields"][f"{side}_side"]
+                    contents += card_dict["fields"][f"{side}_side"]
                     note.fields[i] = contents
             except Exception as exc:
                 logger.warning(
                     "unexpected error while parsing note in deck %s: exc=%s, note=%s",
                     deck.id,
                     str(exc),
-                    note_dict,
+                    card_dict,
                 )
                 raise
             self.mw.col.add_note(note, deck.anki_id)
@@ -284,9 +287,10 @@ class NojiImporter(CopycatImporter):
                         "offset": offset,
                     },
                 )
-                note_dicts = res.json()
-                if not isinstance(note_dicts, list):
+                data = res.json()
+                if not isinstance(data, list):
                     break
+                note_dicts = {note["id"]: note for note in data}
                 count += self._import_cards_for_notes(deck, note_dicts, imported_cids)
                 offset += limit
         return count

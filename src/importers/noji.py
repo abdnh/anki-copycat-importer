@@ -243,16 +243,19 @@ class NojiImporter(CopycatImporter):
                 media_refs_map = {}
                 for id, url in media_urls_map.items():
                     media_info = self._get_media(url)
-                    if not media_info:
-                        continue
-                    mime, data = media_info
-                    ext = guess_extension(mime)
+                    ext = ""
+                    data = b""
+                    if media_info:
+                        mime, data = media_info
+                        ext = guess_extension(mime)
+                        if not ext:
+                            self.warnings.append(f"unrecognized mime for media file {id}: {mime}")
                     if not ext:
-                        self.warnings.append(f"unrecognized mime for media file {id}: {mime}")
-                    else:
-                        filename = f"{id}{ext}"
-                        filename = self.mw.col.media.write_data(filename, data)
-                        media_refs_map[str(id)] = fname_to_link(filename)
+                        # Assume PNG if type is not recognized or media download fails or is disabled
+                        ext = ".png"
+                    filename = f"{id}{ext}"
+                    filename = self.mw.col.media.write_data(filename, data)
+                    media_refs_map[str(id)] = fname_to_link(filename)
 
                 for i, side in enumerate(("front", "back")):
                     contents = ""

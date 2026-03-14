@@ -156,8 +156,8 @@ class NojiImporter(CopycatImporter):
         else:
             return mime, data
 
-    def _import_decks(self) -> None:
-        res = self._api_get("decks")
+    def _import_decks_inner(self, parent_name: str = "", params: dict[str, Any] | None = None) -> None:
+        res = self._api_get("decks", params=params)
         data = res.json()
         decks: dict[int, NojiDeck] = {}
         for deck_dict in data.get("decks", []):
@@ -169,7 +169,7 @@ class NojiImporter(CopycatImporter):
             )
             decks[deck.id] = deck
 
-        def rewrite_deck_names(deck_list: list[dict], parent: str = "") -> None:
+        def rewrite_deck_names(deck_list: list[dict], parent: str) -> None:
             for deck_dict in deck_list:
                 if deck_dict["id"] in decks:
                     deck = decks[deck_dict["id"]]
@@ -179,12 +179,26 @@ class NojiImporter(CopycatImporter):
                     if children:
                         rewrite_deck_names(children, deck.name)
 
-        rewrite_deck_names(data.get("hierarchy", []))
+        rewrite_deck_names(data.get("hierarchy", []), parent_name)
+
         for deck in decks.values():
             changes = self.mw.col.decks.add_normal_deck_with_name(deck.name)
             deck.anki_id = DeckId(changes.id)
 
-        self.decks = list(decks.values())
+        self.decks.extend(decks.values())
+
+    def _import_decks(self) -> None:
+        self.decks: list[NojiDeck] = []
+        self._import_decks_inner()
+
+        # Import folders as parent decks
+        folders = self._api_get("folders").json()
+        for folder in folders:
+            folder_id = folder["id"]
+            folder_name = folder["name"]
+            # NOTE: `parentFolderId` indicatess support for nested folders, but this is not exposed in the UI apparently
+            # parent_folder_id = folder.get("parentFolderId", None)
+            self._import_decks_inner(folder_name, {"folder_id": folder_id})
 
     def _import_notetypes(self) -> None:
         self.notetypes: dict[NojiNotetypeKind, NotetypeDict] = {}
